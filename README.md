@@ -1,56 +1,96 @@
+# KNOT – University Resource & Maintenance Management Platform
 
-___
+## 📌 Project Overview
 
-# eYY-co2060-project-template
+KNOT is a centralized web-based platform designed to manage university resource booking and maintenance reporting within the Faculty of Engineering. The system integrates lecture hall and laboratory scheduling with campus issue reporting to improve transparency, efficiency, and coordination across students, staff, and technicians.
 
-This is a sample repository you can use for your Software Systems Design Project. Once you followed these instructions, remove the text and add a brief introduction to here.
+---
 
-### Enable GitHub Pages
+## 🎯 Problem Statement
 
-You can put the things to be shown in GitHub pages into the _docs/_ folder. Both html and md file formats are supported. You need to go to settings and enable GitHub pages and select _main_ branch and _docs_ folder from the dropdowns, as shown in the below image.
+The Faculty currently relies on manual record books and informal communication methods (verbal reports, emails) to manage lecture hall bookings and maintenance issues. This leads to:
 
-![image](https://user-images.githubusercontent.com/11540782/98789936-028d3600-2429-11eb-84be-aaba665fdc75.png)
+- Booking conflicts and scheduling errors  
+- Lack of visibility into request status  
+- Delayed maintenance responses  
+- Poor coordination between departments  
 
-### Special Configurations
+KNOT addresses these challenges through a unified digital solution.
 
-These projects will be automatically added into [https://projects.ce.pdn.ac.lk](). If you like to show more details about your project on this site, you can fill the parameters in the file, _/docs/index.json_
+---
 
-```
-{
-  "title": "This is the title of the project",
-  "team": [
-    {
-      "name": "Team Member Name 1",
-      "email": "email@eng.pdn.ac.lk",
-      "eNumber": "E/yy/xxx"
-    },
-    {
-      "name": "Team Member Name 2",
-      "email": "email@eng.pdn.ac.lk",
-      "eNumber": "E/yy/xxx"
-    },
-    {
-      "name": "Team Member Name 3",
-      "email": "email@eng.pdn.ac.lk",
-      "eNumber": "E/yy/xxx"
-    }
-  ],
-  "supervisors": [
-    {
-      "name": "Dr. Supervisor 1",
-      "email": "email@eng.pdn.ac.lk"
-    },
-    {
-      "name": "Supervisor 2",
-      "email": "email@eng.pdn.ac.lk"
-    }
-  ],
-  "tags": ["Web", "Software Systems", "CO2060"]
-}
-```
+## 🚀 Proposed Solution
 
-Once you filled this _index.json_ file, please verify the syntax is correct. (You can use [this](https://jsonlint.com/) tool).
+KNOT provides a centralized platform that enables:
 
-### Page Theme
+- Resource booking and approval workflows  
+- Conflict detection and scheduling validation  
+- Maintenance issue reporting with urgency tracking  
+- Technician assignment and progress updates  
+- Integration between booking and maintenance modules  
 
-A custom theme integrated with this GitHub Page, which is based on [github.com/cepdnaclk/eYY-project-theme](https://github.com/cepdnaclk/eYY-project-theme). If you like to remove this default theme, you can remove the file, _docs/\_config.yml_ and use HTML based website.
+The system ensures that resources under maintenance cannot be booked, improving operational reliability.
+
+---
+
+## 🧩 Core Modules (MVP Scope)
+
+### 1️⃣ Authentication & Role Management
+- Secure login system  
+- Role-based access control (Students, Admins, Technicians)
+
+### 2️⃣ Resource Booking Module
+- Lecture hall and lab booking requests  
+- Approval workflow  
+- Conflict detection  
+- Booking status tracking  
+
+### 3️⃣ Maintenance Reporting Module
+- Issue submission with location and category  
+- Technician task assignment  
+- Progress tracking (Pending → In Progress → Resolved)  
+- Maintenance history logging  
+
+---
+
+## 🏗️ System Architecture
+
+- **Frontend:** React.js  
+- **Backend:** Node.js + Express  
+- **Database:** MySQL / MongoDB  
+- **Authentication:** JWT-based Role Management  
+
+---
+
+## 📅 Project Timeline
+
+Semester 3 (Weeks 9–14):
+
+- Week 9 – Requirement Finalization & UI Design  
+- Week 10 – Backend & Database Setup  
+- Week 11 – Booking & Approval Module  
+- Week 12 – Maintenance & Technician Module  
+- Week 13 – Integration & System Validation  
+- Week 14 – Testing, Deployment & MVP Demonstration  
+
+---
+
+## 👥 Team Roles
+
+- **Team Leader:** Minhaj - System Architecture & Integration  
+- **Product Owner:** Senara - Requirements & UX Design  
+- **Developer 1:** Chamudi - Student Interface & Booking Module  
+- **Developer 2:** Ewmi - Maintenance Workflow & Technician Panel  
+
+---
+
+## 📈 Project Status
+
+Currently in development for Milestone 1.  
+Core architecture and requirements have been finalized, and module implementation is in progress.
+
+---
+
+## 📂 Repository Structure (Planned)
+
+
