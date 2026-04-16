@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>KNOT - University Resource Management</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2d7dd2",
+                        "secondary": "#34a853",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#121920",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            min-height: max(884px, 100dvh);
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+    <!-- Auth Guard -->
+    <script>
+        if (!localStorage.getItem('knot_user')) {
+            window.location.href = 'login.html';
+        }
+    </script>
+    <!-- Header -->
+    <header
+        class="sticky top-0 z-50 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-primary/10 px-4 py-3">
+        <div class="max-w-5xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <img src="knot_logo_cropped.png" alt="KNOT Logo" class="h-10 md:h-12 object-contain" />
+            </div>
+            <div class="flex items-center gap-3">
+                <button class="p-2 rounded-full hover:bg-primary/10 text-slate-600 dark:text-slate-300">
+                    <span class="material-symbols-outlined">notifications</span>
+                </button>
+                <div class="w-10 h-10 rounded-full border-2 border-primary/20 overflow-hidden bg-slate-200"
+                    data-alt="Student profile avatar with university ID badge">
+                    <img alt="Profile" class="w-full h-full object-cover"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCn7D_i3Zz2xY7i1n6Nw-5yW67JZ8XHcsYDIWZ2iMsu74Ub5XNBh6B6EnnA9vY0uwrVUQn4QbB2_HtKKyLAWy-XYi3EHr_a9Rk7uupFjgIQ-V0sUexAVBfulYbTKvSM5zmOUbPwkd3QOKVvqBeS3msAOx70tg1Ly777NLfqoFGzyqFu5wmM4LiGQIRXigDEobVLOw8-EHc77v4mhy9t8_TdHD2RIfTIP1QSQemkUwq5DEy8Bff-4YxVRrAYWMyQRl1vJcjbYiFcb-g" />
+                </div>
+            </div>
+        </div>
+    </header>
+    <main class="flex-1 max-w-5xl mx-auto w-full px-4 pb-24 pt-8">
+        <!-- Welcome Section -->
+        <section class="py-6">
+            <h2 class="text-2xl font-bold">Hello, Alex</h2>
+            <p class="text-slate-500 dark:text-slate-400">UoP Engineering Representative</p>
+        </section>
+        <!-- Campus Feature Card -->
+        <div class="relative w-full h-32 rounded-xl overflow-hidden mb-8 shadow-sm"
+            data-alt="Modern architecture of UoP Engineering campus building">
+            <div class="absolute inset-0 bg-gradient-to-r from-primary/80 to-transparent z-10"></div>
+            <img alt="Campus" class="absolute inset-0 w-full h-full object-cover"
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4DRqxX3jRWWdrRApiNSAUdXrqt6VzM3O7BUhNRlfF7wCXnx-2Pt_LROskk6KzYtmVn7CZxxtIygU8q0xYgtAxf2mGs0tFRaZqs_1dojKH85an6anKtwGrK6w6vuo_7ZvQwnafjhi46VXTbWzg3Cg0QkdTyBEgmCpxPmAf7436IYtyok37V0_DnY4xGOPS5vxWb8QPAwaCE1OfOzgcPq_oBTJ-5mCvtTkIyNKIu1fJuCz6UdBJMhJyjGM5897n255bfaElRd4hPF0" />
+            <div class="relative z-20 p-4 flex flex-col justify-end h-full">
+                <span class="text-white/80 text-xs font-medium uppercase tracking-wider">Campus Status</span>
+                <p class="text-white font-semibold">Engineering Block: Open</p>
+            </div>
+        </div>
+        <!-- Quick Actions -->
+        <section class="mb-8">
+            <h3 class="text-lg font-bold mb-4">Quick Actions</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <button
+                    class="flex flex-col items-center justify-center gap-3 p-4 bg-primary text-white rounded-xl shadow-lg shadow-primary/20 hover:bg-primary/90 transition-colors"
+                    onclick="window.location.href='book_space.html'">
+                    <span class="material-symbols-outlined text-3xl">meeting_room</span>
+                    <span class="text-sm font-bold">Book a Hall/Lab</span>
+                </button>
+                <button
+                    class="flex flex-col items-center justify-center gap-3 p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                    onclick="window.location.href='report_fault.html'">
+                    <span class="material-symbols-outlined text-3xl text-primary">report_problem</span>
+                    <span class="text-sm font-bold">Report a Fault</span>
+                </button>
+            </div>
+        </section>
+        <!-- Upcoming Bookings -->
+        <section class="mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold">Upcoming Bookings</h3>
+                <button class="text-primary text-sm font-semibold">View All</button>
+            </div>
+            <div id="bookings-container" class="space-y-3">
+                <!-- Bookings will be dynamically loaded via JS -->
+            </div>
+        </section>
+        <!-- Recent Maintenance -->
+        <section class="mb-8">
+            <h3 class="text-lg font-bold mb-4">Recent Maintenance</h3>
+            <div id="faults-container"
+                class="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 overflow-hidden shadow-sm">
+                <!-- Faults will be dynamically loaded via JS -->
+            </div>
+        </section>
+    </main>
+    <!-- Bottom Navigation -->
+    <nav
+        class="fixed bottom-0 left-0 right-0 bg-white dark:bg-background-dark border-t border-slate-100 dark:border-slate-800 px-6 py-3 z-50">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
+            <a class="flex flex-col items-center gap-1 text-primary" href="index.html">
+                <span class="material-symbols-outlined font-variation-fill">home</span>
+                <span class="text-[10px] font-bold">Home</span>
+            </a>
+            <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="book_space.html">
+                <span class="material-symbols-outlined">calendar_today</span>
+                <span class="text-[10px] font-bold">Bookings</span>
+            </a>
+            <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="report_fault.html">
+                <span class="material-symbols-outlined">build</span>
+                <span class="text-[10px] font-bold">Fix</span>
+            </a>
+            <a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="profile.html">
+                <span class="material-symbols-outlined">person</span>
+                <span class="text-[10px] font-bold">Profile</span>
+            </a>
+        </div>
+    </nav>
+    <script>
+        // Initialize default bookings if empty
+        if (!localStorage.getItem('knot_bookings')) {
+            const defaultBookings = [
+                {
+                    title: "EOE - Main Lab",
+                    time: "Tomorrow, 10:00 AM",
+                    status: "Approved",
+                    icon: "science"
+                },
+                {
+                    title: "DO1 - Seminar Hall",
+                    time: "Friday, 02:30 PM",
+                    status: "Pending",
+                    icon: "corporate_fare"
+                }
+            ];
+            localStorage.setItem('knot_bookings', JSON.stringify(defaultBookings));
+        }
+
+        function renderBookings() {
+            const bookings = JSON.parse(localStorage.getItem('knot_bookings')) || [];
+            const container = document.getElementById('bookings-container');
+            if (!container) return;
+
+            container.innerHTML = bookings.map(b => `
+            <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700 flex items-center justify-between shadow-sm">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 ${b.status === 'Approved' ? 'bg-secondary/10 text-secondary' : (b.status === 'Pending' ? 'bg-amber-100 text-amber-600' : 'bg-primary/10 text-primary')} rounded-lg flex items-center justify-center">
+                        <span class="material-symbols-outlined">${b.icon}</span>
+                    </div>
+                    <div>
+                        <h4 class="font-bold">${b.title}</h4>
+                        <p class="text-xs text-slate-500">${b.time}</p>
+                    </div>
+                </div>
+                <span class="px-3 py-1 ${b.status === 'Approved' ? 'bg-secondary/10 text-secondary' : (b.status === 'Pending' ? 'bg-amber-100 text-amber-600' : 'bg-primary/10 text-primary')} text-xs font-bold rounded-full">${b.status}</span>
+            </div>
+        `).join('');
+        }
+
+        // Initialize default faults if empty
+        if (!localStorage.getItem('knot_faults')) {
+            const defaultFaults = [
+                {
+                    title: "Projector Room 1",
+                    time: "Reported 2h ago",
+                    status: "In Progress",
+                    icon: "potted_plant"
+                },
+                {
+                    title: "HVAC Unit B4",
+                    time: "Fixed Yesterday",
+                    status: "Resolved",
+                    icon: "ac_unit"
+                }
+            ];
+            localStorage.setItem('knot_faults', JSON.stringify(defaultFaults));
+        }
+
+        function renderFaults() {
+            const faults = JSON.parse(localStorage.getItem('knot_faults')) || [];
+            const container = document.getElementById('faults-container');
+            if (!container) return;
+
+            container.innerHTML = faults.map((f, index) => {
+                const isLast = index === faults.length - 1;
+                const borderClass = isLast ? '' : 'border-b border-slate-50 dark:border-slate-700';
+
+                if (f.status === 'Resolved') {
+                    return `
+                <div class="p-4 flex items-center justify-between ${borderClass}">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-secondary">${f.icon}</span>
+                        <div>
+                            <p class="text-sm font-bold">${f.title}</p>
+                            <p class="text-xs text-slate-500">${f.time}</p>
+                        </div>
+                    </div>
+                    <span class="material-symbols-outlined text-secondary">check_circle</span>
+                </div>`;
+                } else {
+                    return `
+                <div class="p-4 ${borderClass} flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-primary">${f.icon}</span>
+                        <div>
+                            <p class="text-sm font-bold">${f.title}</p>
+                            <p class="text-xs text-slate-500">${f.time}</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-end">
+                        <span class="text-[10px] font-bold uppercase text-primary mb-1">${f.status}</span>
+                        <div class="w-16 h-1 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                            <div class="w-2/3 h-full bg-primary"></div>
+                        </div>
+                    </div>
+                </div>`;
+                }
+            }).join('');
+        }
+
+        // Run on load
+        document.addEventListener('DOMContentLoaded', () => {
+            renderBookings();
+            renderFaults();
+        });
+    </script>
+</body>
+
+</html>

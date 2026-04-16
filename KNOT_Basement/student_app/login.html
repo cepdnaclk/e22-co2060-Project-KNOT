@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Login to KNOT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+        rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2d7dd2",
+                        "secondary": "#34a853",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#121920",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk"]
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: #f6f7f8;
+            min-height: max(884px, 100dvh);
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #2d7dd2;
+            box-shadow: 0 0 0 1px #2d7dd2;
+        }
+    </style>
+</head>
+
+<body class="text-slate-900 dark:text-slate-100 min-h-screen flex flex-col items-center w-full">
+
+    <div class="w-full min-h-screen flex flex-col bg-background-light">
+
+        <!-- Header Logo -->
+        <header class="flex items-center p-6 bg-transparent z-10 w-full max-w-7xl mx-auto">
+            <div class="flex items-center gap-2">
+                <img src="knot_logo_cropped.png" alt="KNOT Logo" class="h-16 md:h-20 object-contain" />
+            </div>
+        </header>
+
+        <!-- Login Card -->
+        <main class="flex-1 w-full px-4 flex flex-col justify-center">
+            <div
+                class="bg-white rounded-3xl shadow-xl border border-slate-100 p-8 w-full max-w-md mx-auto border-t-[6px] border-t-primary relative">
+
+                <!-- Lock Icon -->
+                <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span class="material-symbols-outlined text-primary text-3xl font-variation-fill">lock</span>
+                </div>
+
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-bold mb-2">Login to KNOT</h2>
+                    <p class="text-sm text-slate-500 font-medium">Enter your credentials to manage resources</p>
+                </div>
+
+                <!-- Form -->
+                <div class="space-y-5" onsubmit="event.preventDefault(); handleLogin();">
+                    <!-- Username -->
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Username</label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-4 top-3.5 text-slate-400">person</span>
+                            <input type="text" id="email" placeholder="e.g., e22237"
+                                class="w-full border border-slate-200 rounded-xl py-3.5 pl-12 pr-4 text-sm placeholder:text-slate-400 text-slate-700 font-medium bg-white" />
+                        </div>
+                    </div>
+
+                    <!-- Password -->
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="block text-sm font-semibold">Password</label>
+                            <a href="#" class="text-xs text-primary font-medium hover:underline">Forgot Password?</a>
+                        </div>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-4 top-3.5 text-slate-400">key</span>
+                            <input type="password" id="password"
+                                class="w-full border border-slate-200 rounded-xl py-3.5 pl-12 pr-12 text-sm placeholder:text-slate-400 text-slate-700 font-medium bg-white" />
+                            <button class="absolute right-4 top-3.5 text-slate-400 hover:text-slate-600">
+                                <span class="material-symbols-outlined text-lg">visibility</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Remember Me -->
+                    <div class="flex items-center gap-3 pt-1 mb-4">
+                        <input type="checkbox" id="remember"
+                            class="w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary focus:ring-opacity-50" />
+                        <label for="remember" class="text-sm text-slate-600">Remember this device</label>
+                    </div>
+
+                    <div id="error-message" class="text-red-500 text-sm font-medium text-center hidden">Invalid
+                        credentials.</div>
+
+                    <!-- Sign In Button -->
+                    <button
+                        class="w-full bg-primary text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
+                        onclick="handleLogin()">
+                        Sign In <span class="material-symbols-outlined font-variation-fill">arrow_forward</span>
+                    </button>
+
+                    <div class="border-t border-slate-100 my-6"></div>
+
+                    <!-- Contact Support -->
+                    <button
+                        class="w-full bg-slate-50 text-slate-700 border border-slate-100 hover:bg-slate-100 py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors">
+                        <span
+                            class="material-symbols-outlined text-lg text-slate-500 border border-slate-500 rounded-full w-5 h-5 flex items-center justify-center text-[11px]">support_agent</span>
+                        Contact Admin Support
+                    </button>
+                </div>
+            </div>
+
+            <p class="text-[11px] text-center text-slate-500 mt-8 mb-4">
+                &copy; 2024 KNOT University Resource Management System.<br />
+                All rights reserved.
+            </p>
+            <div class="flex justify-center gap-4 text-[11px] text-slate-400 font-medium pb-8">
+                <a href="#" class="hover:text-primary transition-colors">Privacy Policy</a>
+                <a href="#" class="hover:text-primary transition-colors">Terms of Service</a>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Redirect if already logged in
+        if (localStorage.getItem('knot_user')) {
+            window.location.href = 'index.html';
+        }
+
+        function handleLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorElement = document.getElementById('error-message');
+
+            // Specific credentials check
+            if (email.trim() === 'e22237' && password === '1234') {
+                // Determine user details
+                const user = {
+                    name: "Minhaj Ali",
+                    email: "e22237@eng.pdn.ac.lk",
+                    role: "Student",
+                    department: "Department of Computer Engineering",
+                    avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuCn7D_i3Zz2xY7i1n6Nw-5yW67JZ8XHcsYDIWZ2iMsu74Ub5XNBh6B6EnnA9vY0uwrVUQn4QbB2_HtKKyLAWy-XYi3EHr_a9Rk7uupFjgIQ-V0sUexAVBfulYbTKvSM5zmOUbPwkd3QOKVvqBeS3msAOx70tg1Ly777NLfqoFGzyqFu5wmM4LiGQIRXigDEobVLOw8-EHc77v4mhy9t8_TdHD2RIfTIP1QSQemkUwq5DEy8Bff-4YxVRrAYWMyQRl1vJcjbYiFcb-g",
+                    initials: "MA"
+                };
+
+                localStorage.setItem('knot_user', JSON.stringify(user));
+
+                const btn = document.querySelector('button[onclick="handleLogin()"]');
+                btn.innerHTML = 'Signing In...';
+                btn.classList.add('opacity-75');
+
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 500);
+
+            } else {
+                errorElement.classList.remove('hidden');
+            }
+        }
+    </script>
+</body>
+
+</html>

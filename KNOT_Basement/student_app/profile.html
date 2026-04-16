@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>User Profile - KNOT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2d7dd2",
+                        "secondary": "#34a853",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#121920",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk"]
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: #f6f7f8;
+            min-height: max(884px, 100dvh);
+            overflow-x: hidden;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+
+<body class="text-slate-900 min-h-screen flex flex-col items-center w-full">
+    <!-- Auth Guard -->
+    <script>
+        if (!localStorage.getItem('knot_user')) {
+            window.location.href = 'login.html';
+        }
+    </script>
+
+    <div class="max-w-5xl w-full min-h-screen flex flex-col bg-background-light relative shadow-xl">
+
+        <!-- Header -->
+        <header
+            class="flex items-center justify-between p-4 z-10 w-full bg-white bg-opacity-90 border-b border-slate-100">
+            <div class="flex items-center gap-2">
+                <img src="knot_logo_cropped.png" alt="KNOT Logo" class="h-10 md:h-12 object-contain" />
+            </div>
+            <div class="flex gap-2">
+                <button
+                    class="p-2 text-primary hover:bg-blue-50 rounded-full transition-colors flex items-center justify-center">
+                    <span class="material-symbols-outlined font-variation-fill">settings</span>
+                </button>
+                <button
+                    class="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors flex items-center justify-center"
+                    onclick="logout()">
+                    <span class="material-symbols-outlined">logout</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="flex-1 w-full pb-24 text-center pb-20 overflow-y-auto w-full">
+
+            <!-- Top Gradient BG -->
+            <div class="h-32 bg-gradient-to-b from-blue-50 to-background-light w-full"></div>
+
+            <!-- Profile Info -->
+            <div class="flex flex-col items-center px-6 -mt-16 z-10 relative">
+                <div class="relative w-32 h-32 mb-4">
+                    <div class="w-full h-full rounded-full border-4 border-white shadow-lg bg-cover bg-center overflow-hidden"
+                        style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDr9val59-mr2aRn_B4EhBSmmEUKGB9DFaS3Yu_F-juTXiwD6MznaYx2mk5t9oJoTqkgR_xmHp4bavWZ2-sBqalUrNafsCCEwUdVqQb-WUAB1XXTpLqZ-jpPLkXmndWBf7F5Dk1SgRE9lUL1XYfjG_WM1XDBFaqllIbnluURKQZCqwo3LPID7EuXDWYzCjyM13GDiTb4bfV488Sf5DMzR-IT0oEoEPZPSPD3ErHfMQUWv2lkj_xkcy2fYA2GJnSApq1BZdA-m07D-M');">
+                    </div>
+                    <div class="absolute bottom-2 right-1 w-6 h-6 bg-secondary rounded-full border-[3px] border-white">
+                    </div>
+                </div>
+
+                <h2 id="userName" class="text-2xl font-bold tracking-tight text-slate-900 mb-1">Prof. Sarah Jenkins</h2>
+                <p id="userRole" class="text-primary font-bold text-xs uppercase tracking-widest mb-2">LECTURER</p>
+                <p id="userDept" class="text-sm text-slate-500 max-w-[250px] leading-relaxed mb-6">Department of
+                    Electrical and Electronic Engineering</p>
+
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-2 gap-4 w-full mb-8">
+                    <div
+                        class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col items-start gap-1">
+                        <div class="flex items-center gap-2 mb-2 text-primary">
+                            <span class="material-symbols-outlined text-[20px]">event_available</span>
+                            <span class="text-[11px] font-bold uppercase tracking-wider">Bookings</span>
+                        </div>
+                        <span id="bookingsCount" class="text-4xl font-bold text-slate-900">0</span>
+                        <span class="text-[11px] text-slate-500">Active this semester</span>
+                    </div>
+
+                    <div
+                        class="bg-[#f2faee] rounded-2xl p-5 shadow-sm border border-[#e2f1dd] flex flex-col items-start gap-1">
+                        <div class="flex items-center gap-2 mb-2 text-[#28a745]">
+                            <span class="material-symbols-outlined text-[20px] font-variation-fill">warning</span>
+                            <span class="text-[11px] font-bold uppercase tracking-wider text-[#28a745]">Issues</span>
+                        </div>
+                        <span id="issuesCount" class="text-4xl font-bold text-slate-900">0</span>
+                        <span class="text-[11px] text-slate-500">Pending resolution</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Bookings section (Mirror from index) -->
+            <div class="px-6 text-left w-full mb-8">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-slate-900">My Recent Bookings</h3>
+                    <a href="book_space.html" class="text-primary text-sm font-semibold hover:underline">View All</a>
+                </div>
+
+                <div id="pb-container" class="space-y-3">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+
+            <!-- My Reported Issues section -->
+            <div class="px-6 text-left w-full mb-8">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-slate-900">My Reported Issues</h3>
+                    <a href="report_fault.html" class="text-primary text-sm font-semibold hover:underline">History</a>
+                </div>
+
+                <div id="pi-container" class="space-y-3">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav
+            class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-100 px-6 py-3 z-50 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
+            <div class="max-w-5xl mx-auto flex justify-between items-center">
+                <a class="flex flex-col items-center gap-1 text-slate-400" href="index.html">
+                    <span class="material-symbols-outlined font-variation-fill">home</span>
+                    <span class="text-[10px] font-bold">Home</span>
+                </a>
+                <a class="flex flex-col items-center gap-1 text-slate-400" href="book_space.html">
+                    <span class="material-symbols-outlined">calendar_today</span>
+                    <span class="text-[10px] font-bold">Bookings</span>
+                </a>
+                <a class="flex flex-col items-center gap-1 text-slate-400" href="report_fault.html">
+                    <span class="material-symbols-outlined">build</span>
+                    <span class="text-[10px] font-bold">Fix</span>
+                </a>
+                <a class="flex flex-col items-center gap-1 text-primary" href="profile.html">
+                    <span class="material-symbols-outlined font-variation-fill">person</span>
+                    <span class="text-[10px] font-bold">Profile</span>
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <script>
+        function logout() {
+            localStorage.removeItem('knot_user');
+            window.location.href = 'login.html';
+        }
+
+        // Load profile data and stats
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = JSON.parse(localStorage.getItem('knot_user'));
+            if (user) {
+                document.getElementById('userName').innerText = user.name || "Alex";
+                document.getElementById('userRole').innerText = user.role || "STUDENT";
+                if (user.department) document.getElementById('userDept').innerText = user.department;
+            }
+
+            const bookings = JSON.parse(localStorage.getItem('knot_bookings')) || [];
+            document.getElementById('bookingsCount').innerText = bookings.length;
+
+            const pb = document.getElementById('pb-container');
+            if (bookings.length === 0) {
+                pb.innerHTML = `<p class="text-sm text-slate-500 italic">No recent bookings.</p>`;
+            } else {
+                pb.innerHTML = bookings.slice(0, 2).map(b => `
+                    <div class="bg-white p-4 rounded-xl border border-slate-100 flex items-center justify-between shadow-sm">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 ${b.status === 'Approved' ? 'bg-secondary/10 text-secondary' : (b.status === 'Pending' ? 'bg-amber-100 text-amber-600' : 'bg-primary/10 text-primary')} rounded-lg flex items-center justify-center">
+                                <span class="material-symbols-outlined">${b.icon}</span>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-sm truncate w-40">${b.title}</h4>
+                                <p class="text-[11px] text-slate-500 mt-0.5">${b.time}</p>
+                            </div>
+                        </div>
+                        <span class="material-symbols-outlined text-slate-300">chevron_right</span>
+                    </div>
+                `).join('');
+            }
+
+            const faults = JSON.parse(localStorage.getItem('knot_faults')) || [];
+            document.getElementById('issuesCount').innerText = faults.length;
+
+            const pi = document.getElementById('pi-container');
+            if (faults.length === 0) {
+                pi.innerHTML = `<p class="text-sm text-slate-500 italic">No reported issues.</p>`;
+            } else {
+                pi.innerHTML = faults.slice(0, 2).map(f => {
+                    // map visual styling based on status/priority generic
+                    const typeColorClass = f.status === 'Resolved' ? 'bg-secondary/10 text-secondary' :
+                        (f.title.includes('WiFi') ? 'bg-red-50 text-red-500' : 'bg-amber-50 text-amber-500');
+                    const badgeClass = f.title.includes('WiFi') ? 'bg-red-50 text-red-600' :
+                        (f.status === 'Resolved' ? 'bg-secondary/10 text-secondary' : 'bg-amber-50 text-amber-600');
+                    const badgeLabel = f.title.includes('WiFi') ? 'HIGH' : (f.status === 'Resolved' ? 'DONE' : 'LOW');
+
+                    return `
+                    <div class="bg-white p-4 rounded-xl border border-slate-100 flex items-center justify-between shadow-sm">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 ${typeColorClass} rounded-lg flex items-center justify-center">
+                                <span class="material-symbols-outlined font-variation-fill">${f.icon === 'construction' ? 'warning' : f.icon}</span>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-sm truncate w-40">${f.title}</h4>
+                                <p class="text-[11px] text-slate-500 italic mt-0.5">Status: ${f.status}</p>
+                            </div>
+                        </div>
+                        <div class="px-2 py-1 rounded ${badgeClass} text-[10px] font-bold uppercase tracking-wider">${badgeLabel}</div>
+                    </div>`
+                }).join('');
+            }
+        });
+    </script>
+</body>
+
+</html>
