@@ -23,7 +23,11 @@ export default function Login() {
       if (response.data.success) {
         localStorage.setItem('knot_user', JSON.stringify(response.data.user));
         setTimeout(() => {
-            navigate('/');
+            if (response.data.user.role === 'maintenance_admin') {
+              navigate('/admin');
+            } else {
+              navigate('/');
+            }
         }, 500);
       }
     } catch (err) {

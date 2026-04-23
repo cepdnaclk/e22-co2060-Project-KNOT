@@ -89,6 +89,14 @@ async function setupDatabase() {
       `, [userId, userId]);
     }
 
+    const [adminRows] = await connection.query(`SELECT * FROM users WHERE username = 'admin'`);
+    if (adminRows.length === 0) {
+      await connection.query(`
+        INSERT INTO users (username, password, name, role, department) 
+        VALUES ('admin', 'adminpass', 'System Administrator', 'maintenance_admin', 'Facilities Management')
+      `);
+    }
+
     console.log("Database initialized and mock data seeded successfully!");
 
   } catch (error) {
