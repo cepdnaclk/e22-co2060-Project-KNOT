@@ -31,6 +31,7 @@ async function setupDatabase() {
       );
     `);
 
+    
     // Create Faults Table
     console.log("Creating Faults table...");
     await connection.query(`
