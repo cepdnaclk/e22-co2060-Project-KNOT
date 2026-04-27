@@ -1,0 +1,53 @@
+
+> knot-client@0.0.0 dev
+> vite
+
+
+  VITE v5.4.21  ready in 428 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+1:25:11 PM [vite] hmr update /src/App.jsx, /src/index.css
+1:36:23 PM [vite] hmr update /src/pages/BookSpace.jsx, /src/index.css
+1:36:25 PM [vite] hmr update /src/pages/Dashboard.jsx, /src/index.css
+1:50:12 PM [vite] hmr update /src/pages/Dashboard.jsx, /src/index.css
+1:50:16 PM [vite] hmr update /src/pages/BookSpace.jsx, /src/index.css
+1:58:06 PM [vite] hmr update /src/pages/Dashboard.jsx, /src/index.css
+2:07:40 PM [vite] hmr update /src/pages/Dashboard.jsx, /src/index.css
+2:52:51 PM [vite] hmr update /src/pages/BookSpace.jsx, /src/index.css
+2:56:17 PM [vite] hmr update /src/pages/BookSpace.jsx, /src/index.css
+2:59:28 PM [vite] hmr update /src/pages/BookSpace.jsx, /src/index.css
+10:23:22 AM [vite] hmr update /src/pages/ReportFault.jsx, /src/index.css
+10:33:58 AM [vite] hmr update /src/pages/ReportFault.jsx, /src/index.css
+10:33:58 AM [vite] ✨ new dependencies optimized: react-leaflet, leaflet
+10:33:58 AM [vite] ✨ optimized dependencies changed. reloading
+10:55:25 AM [vite] hmr update /src/pages/Dashboard.jsx, /src/index.css
+10:55:38 AM [vite] hmr update /src/pages/Login.jsx, /src/index.css
+10:55:48 AM [vite] hmr update /src/pages/BookSpace.jsx, /src/index.css
+10:56:00 AM [vite] hmr update /src/pages/Profile.jsx, /src/index.css
+10:56:15 AM [vite] hmr update /src/pages/ReportFault.jsx, /src/index.css
+11:00:35 AM [vite] hmr update /src/pages/Dashboard.jsx, /src/index.css
+11:00:51 AM [vite] hmr update /src/pages/Login.jsx, /src/index.css
+11:01:04 AM [vite] hmr update /src/pages/BookSpace.jsx, /src/index.css
+11:01:17 AM [vite] hmr update /src/pages/Profile.jsx, /src/index.css
+11:01:32 AM [vite] hmr update /src/pages/ReportFault.jsx, /src/index.css
+11:05:26 AM [vite] hmr update /src/pages/BookSpace.jsx, /src/index.css
+11:05:26 AM [vite] hmr update /src/pages/Profile.jsx, /src/index.css
+11:05:26 AM [vite] hmr update /src/pages/ReportFault.jsx, /src/index.css
+11:05:26 AM [vite] hmr update /src/pages/Login.jsx, /src/index.css
+11:05:26 AM [vite] hmr update /src/pages/Dashboard.jsx, /src/index.css
+11:06:42 AM [vite] hmr update /src/pages/Dashboard.jsx, /src/index.css
+11:06:54 AM [vite] hmr update /src/pages/Login.jsx, /src/index.css
+11:07:05 AM [vite] hmr update /src/pages/BookSpace.jsx, /src/index.css
+11:07:17 AM [vite] hmr update /src/pages/Profile.jsx, /src/index.css
+11:07:30 AM [vite] hmr update /src/pages/ReportFault.jsx, /src/index.css
+11:09:30 AM [vite] hmr update /src/pages/Dashboard.jsx, /src/index.css
+11:09:45 AM [vite] hmr update /src/pages/Login.jsx, /src/index.css
+11:09:58 AM [vite] hmr update /src/pages/BookSpace.jsx, /src/index.css
+11:10:09 AM [vite] hmr update /src/pages/Profile.jsx, /src/index.css
+11:10:21 AM [vite] hmr update /src/pages/ReportFault.jsx, /src/index.css
+11:27:42 AM [vite] page reload src/main.jsx
+11:27:42 AM [vite] page reload index.html
+11:27:42 AM [vite] vite.config.js changed, restarting server...
+(!) Could not auto-determine entry point from rollupOptions or html files and there are no explicit optimizeDeps.include patterns. Skipping dependency pre-bundling.
+11:27:42 AM [vite] server restarted.
