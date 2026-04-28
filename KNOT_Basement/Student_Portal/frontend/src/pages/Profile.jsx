@@ -89,7 +89,7 @@ export default function Profile() {
       {/* Basic Navigation map to React router */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-6 py-3 z-50">
         <div className="max-w-5xl mx-auto flex justify-between items-center">
-            <button className="flex flex-col items-center gap-1 text-slate-400" onClick={() => navigate('/')}>
+            <button className="flex flex-col items-center gap-1 text-slate-400" onClick={() => navigate(user?.role === 'Lecturer' ? '/lecturer' : '/')}>
                 <span className="material-symbols-outlined font-variation-fill">home</span>
                 <span className="text-[10px] font-bold">Home</span>
             </button>

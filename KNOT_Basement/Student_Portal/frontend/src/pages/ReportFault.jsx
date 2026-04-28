@@ -61,7 +61,7 @@ export default function ReportFault() {
       });
 
       setTimeout(() => {
-        navigate('/');
+        navigate(user?.role === 'Lecturer' ? '/lecturer' : '/');
       }, 300);
     } catch (err) {
       console.error(err);

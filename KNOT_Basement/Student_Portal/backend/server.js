@@ -17,6 +17,15 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
+async function initDB() {
+  try { await pool.query('ALTER TABLE bookings ADD COLUMN end_time DATETIME'); } catch(e){}
+  try { await pool.query('ALTER TABLE bookings ADD COLUMN assigned_lecturer VARCHAR(255)'); } catch(e){}
+  try { await pool.query('ALTER TABLE bookings ADD COLUMN purpose TEXT'); } catch(e){}
+  try { await pool.query('ALTER TABLE faults ADD COLUMN maintenance_notes TEXT'); } catch(e){}
+  try { await pool.query('ALTER TABLE faults ADD COLUMN photo_url VARCHAR(255)'); } catch(e){}
+}
+initDB();
+
 // Authentication Endpoint
 app.post('/api/auth/login', async (req, res) => {
   const { username, password } = req.body;
@@ -81,13 +90,51 @@ app.get('/api/bookings/:userId', async (req, res) => {
 });
 
 app.post('/api/bookings', async (req, res) => {
-  const { title, time_display, user_id, icon, status, end_time } = req.body;
+  const { title, time_display, user_id, icon, status, end_time, assigned_lecturer, purpose } = req.body;
   try {
     const [result] = await pool.query(
-      'INSERT INTO bookings (title, time_display, user_id, icon, status, end_time) VALUES (?, ?, ?, ?, ?, ?)',
-      [title, time_display, user_id, icon || 'meeting_room', status || 'Pending', end_time]
+      'INSERT INTO bookings (title, time_display, user_id, icon, status, end_time, assigned_lecturer, purpose) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [title, time_display, user_id, icon || 'meeting_room', status || 'Pending', end_time, assigned_lecturer || null, purpose || null]
     );
     res.json({ success: true, id: result.insertId });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Lecturer Endpoints
+app.get('/api/lecturer/requests/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [userRows] = await pool.query('SELECT name FROM users WHERE id = ?', [id]);
+    if (userRows.length === 0) return res.status(404).json({ error: "User not found" });
+    const lecturerName = userRows[0].name;
+
+    const [rows] = await pool.query(
+      'SELECT b.*, u.name as requestor_name FROM bookings b JOIN users u ON b.user_id = u.id WHERE b.assigned_lecturer = ? AND b.status = "Pending" ORDER BY b.id DESC',
+      [lecturerName]
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/lecturer/requests/:id/forward', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query('UPDATE bookings SET status = "Pending AR" WHERE id = ?', [id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/lecturer/requests/:id/reject', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query('UPDATE bookings SET status = "Rejected" WHERE id = ?', [id]);
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -216,6 +263,65 @@ app.put('/api/tickets/:id', async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// Booking Admin Endpoints
+app.get('/api/admin/bookings/stats', async (req, res) => {
+  try {
+    const [bookings] = await pool.query(`SELECT COUNT(*) AS totalBookings FROM bookings WHERE title IS NOT NULL`);
+    const [pendingBookings] = await pool.query(`SELECT COUNT(*) AS pendingBookings FROM bookings WHERE status = 'Pending AR'`);
+    
+    res.json({
+        totalBookingsToday: bookings[0].totalBookings, // using total bookings since we don't have created_at yet
+        pendingBookings: pendingBookings[0].pendingBookings
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/admin/pending-bookings', async (req, res) => {
+  try {
+    const [approvals] = await pool.query(`
+        SELECT 
+            b.id, 
+            b.title as room_name, 
+            b.time_display as booking_date, 
+            b.status,
+            u.name AS user_name, 
+            u.role
+        FROM bookings b
+        JOIN users u ON b.user_id = u.id
+        WHERE b.status = 'Pending AR'
+    `);
+    res.json(approvals);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/admin/bookings/:id', async (req, res) => {
+  const { id } = req.params;
+  const { action } = req.body; 
+
+  if (!['approve', 'reject'].includes(action)) {
+      return res.status(400).json({ error: 'Invalid action. Must be approve or reject.' });
+  }
+
+  const newStatus = action === 'approve' ? 'Approved' : 'Rejected';
+
+  try {
+      const [result] = await pool.query(
+          'UPDATE bookings SET status = ? WHERE id = ?',
+          [newStatus, id]
+      );
+      if (result.affectedRows === 0) {
+          return res.status(404).json({ error: 'Booking not found' });
+      }
+      res.json({ message: `Booking successfully ${newStatus}` });
+  } catch (err) {
+      res.status(500).json({ error: err.message });
   }
 });
 

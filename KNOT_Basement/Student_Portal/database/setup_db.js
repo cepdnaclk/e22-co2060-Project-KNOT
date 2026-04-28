@@ -59,6 +59,9 @@ async function setupDatabase() {
         status VARCHAR(50) DEFAULT 'Pending',
         icon VARCHAR(50) DEFAULT 'meeting_room',
         user_id INT,
+        assigned_lecturer VARCHAR(255),
+        purpose TEXT,
+        end_time VARCHAR(255),
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
       );
     `);
@@ -83,9 +86,9 @@ async function setupDatabase() {
 
       // Seed mock bookings
       await connection.query(`
-        INSERT INTO bookings (title, time_display, status, icon, user_id) VALUES 
-        ('EOE - Main Lab', 'Tomorrow, 10:00 AM', 'Approved', 'science', ?),
-        ('DO1 - Seminar Hall', 'Friday, 02:30 PM', 'Pending', 'corporate_fare', ?)
+        INSERT INTO bookings (title, time_display, status, icon, user_id, assigned_lecturer, purpose) VALUES 
+        ('EOE - Main Lab', 'Tomorrow, 10:00 AM', 'Approved', 'science', ?, NULL, 'General Study'),
+        ('DO1 - Seminar Hall', 'Friday, 02:30 PM', 'Pending', 'corporate_fare', ?, 'Dr. Smith', 'Group Discussion')
       `, [userId, userId]);
     }
 
@@ -94,6 +97,22 @@ async function setupDatabase() {
       await connection.query(`
         INSERT INTO users (username, password, name, role, department) 
         VALUES ('admin', 'adminpass', 'System Administrator', 'maintenance_admin', 'Facilities Management')
+      `);
+    }
+
+    const [bookAdminRows] = await connection.query(`SELECT * FROM users WHERE username = 'bookadmin'`);
+    if (bookAdminRows.length === 0) {
+      await connection.query(`
+        INSERT INTO users (username, password, name, role, department) 
+        VALUES ('bookadmin', 'adminpass', 'Booking Administrator', 'booking_admin', 'AR Office')
+      `);
+    }
+
+    const [lecturerRows] = await connection.query(`SELECT * FROM users WHERE username = 'lecturer1'`);
+    if (lecturerRows.length === 0) {
+      await connection.query(`
+        INSERT INTO users (username, password, name, role, department) 
+        VALUES ('lecturer1', '1234', 'Dr. Smith', 'Lecturer', 'Department of Computer Engineering')
       `);
     }
 

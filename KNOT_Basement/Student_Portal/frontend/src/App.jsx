@@ -6,6 +6,8 @@ import BookSpace from './pages/BookSpace';
 import Profile from './pages/Profile';
 import MaintenanceDashboard from './pages/admin/MaintenanceDashboard';
 import TicketDetails from './pages/admin/TicketDetails';
+import BookingDashboard from './pages/admin/BookingDashboard';
+import LecturerDashboard from './pages/LecturerDashboard';
 
 const ProtectedRoute = ({ children }) => {
   return localStorage.getItem('knot_user') ? children : <Navigate to="/login" />;
@@ -24,6 +26,8 @@ export default function App() {
         {/* Unified Admin Routes */}
         <Route path="/admin" element={<ProtectedRoute><MaintenanceDashboard /></ProtectedRoute>} />
         <Route path="/admin/ticket/:id" element={<ProtectedRoute><TicketDetails /></ProtectedRoute>} />
+        <Route path="/booking-admin" element={<ProtectedRoute><BookingDashboard /></ProtectedRoute>} />
+        <Route path="/lecturer" element={<ProtectedRoute><LecturerDashboard /></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   );

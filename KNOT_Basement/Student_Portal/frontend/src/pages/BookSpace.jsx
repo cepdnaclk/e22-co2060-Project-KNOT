@@ -75,7 +75,7 @@ export default function BookSpace() {
         alert("Please provide the purpose of booking");
         return;
     }
-    if (!lecturer) {
+    if (!lecturer && user?.role !== 'Lecturer') {
         alert("Please select a lecturer in charge");
         return;
     }
@@ -91,13 +91,15 @@ export default function BookSpace() {
         time_display: `${date} ${formatTime(startTime)} - ${formatTime(endTime)}`,
         user_id: user.id,
         icon: location === 'do1' ? 'architecture' : 'science',
-        status: 'Pending',
-        end_time: end_time
+        status: user?.role === 'Lecturer' ? 'Pending AR' : 'Pending',
+        end_time: end_time,
+        assigned_lecturer: user?.role === 'Lecturer' ? null : lecturer,
+        purpose: purpose
       });
       
       // Navigate once response is successful
       setTimeout(() => {
-        navigate('/');
+        navigate(user?.role === 'Lecturer' ? '/lecturer' : '/');
       }, 500);
     } catch(err) {
         console.error(err);
@@ -181,17 +183,19 @@ export default function BookSpace() {
                          <textarea value={purpose} onChange={e => setPurpose(e.target.value)} placeholder="e.g., Club meeting, Supplementary lecture, etc." className="w-full border border-slate-200 bg-white rounded-lg p-3 h-20 placeholder:text-slate-400 focus:border-primary shadow-sm text-sm"></textarea>
                      </div>
 
-                     <div>
-                         <label className="block text-xs font-bold mb-1.5">Select Lecturer in Charge <span className="text-red-500">*</span></label>
-                         <div className="relative">
-                             <select value={lecturer} onChange={e => setLecturer(e.target.value)} className="w-full border border-slate-200 bg-white rounded-lg p-3 appearance-none text-sm focus:border-primary shadow-sm">
-                                 <option value="" disabled>Choose a lecturer for endorsement</option>
-                                 <option value="dr_smith">Dr. Smith</option>
-                                 <option value="prof_johnson">Prof. Johnson</option>
-                             </select>
-                             <span className="material-symbols-outlined absolute right-3 top-3 text-slate-400 pointer-events-none text-lg">expand_more</span>
-                         </div>
-                     </div>
+                     {user?.role !== 'Lecturer' && (
+                       <div>
+                           <label className="block text-xs font-bold mb-1.5">Select Lecturer in Charge <span className="text-red-500">*</span></label>
+                           <div className="relative">
+                               <select value={lecturer} onChange={e => setLecturer(e.target.value)} className="w-full border border-slate-200 bg-white rounded-lg p-3 appearance-none text-sm focus:border-primary shadow-sm">
+                                   <option value="" disabled>Choose a lecturer for endorsement</option>
+                                   <option value="Dr. Smith">Dr. Smith</option>
+                                   <option value="Prof. Johnson">Prof. Johnson</option>
+                               </select>
+                               <span className="material-symbols-outlined absolute right-3 top-3 text-slate-400 pointer-events-none text-lg">expand_more</span>
+                           </div>
+                       </div>
+                     )}
 
                      <div className="flex justify-between items-center py-2">
                          <span className="font-bold text-xs text-slate-900 block">Time Slot <span className="text-red-500">*</span></span>
@@ -223,7 +227,9 @@ export default function BookSpace() {
 
                      <div className="bg-blue-50 border border-blue-100 p-3 flex gap-2 rounded-lg mt-2 items-start">
                          <span className="material-symbols-outlined text-primary text-lg">info</span>
-                         <p className="text-[11px] text-slate-600 leading-tight">Your request will first be sent to the selected lecturer for endorsement, then to the AR office for final approval.</p>
+                         <p className="text-[11px] text-slate-600 leading-tight">
+                           {user?.role === 'Lecturer' ? 'Your request will be sent directly to the AR office for final approval.' : 'Your request will first be sent to the selected lecturer for endorsement, then to the AR office for final approval.'}
+                         </p>
                      </div>
 
                      <button disabled={loading} onClick={handleBooking} className="w-full bg-primary text-white py-3.5 rounded-xl font-bold text-sm shadow-md transition-colors hover:bg-primary/90 mt-4 outline-none">
@@ -236,7 +242,7 @@ export default function BookSpace() {
       
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-6 py-3 z-50">
         <div className="max-w-5xl mx-auto flex justify-between items-center">
-            <button className="flex flex-col items-center gap-1 text-slate-400" onClick={() => navigate('/')}>
+            <button className="flex flex-col items-center gap-1 text-slate-400" onClick={() => navigate(user?.role === 'Lecturer' ? '/lecturer' : '/')}>
                 <span className="material-symbols-outlined font-variation-fill">home</span>
                 <span className="text-[10px] font-bold">Home</span>
             </button>

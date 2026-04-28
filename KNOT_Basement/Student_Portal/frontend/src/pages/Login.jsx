@@ -25,6 +25,10 @@ export default function Login() {
         setTimeout(() => {
             if (response.data.user.role === 'maintenance_admin') {
               navigate('/admin');
+            } else if (response.data.user.role === 'booking_admin') {
+              navigate('/booking-admin');
+            } else if (response.data.user.role === 'Lecturer') {
+              navigate('/lecturer');
             } else {
               navigate('/');
             }
