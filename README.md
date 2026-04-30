@@ -34,7 +34,7 @@ The system ensures that resources under maintenance cannot be booked, improving 
 
 ---
 
-## 🧩 Core Modules (MVP Scope)
+## 🧩 Core Modules (MVP Scope) for 3 rd semester
 
 ### 1️⃣ Authentication & Role Management
 - Secure login system  
