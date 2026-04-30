@@ -44,17 +44,17 @@ function App() {
     <Router>
       <div className="bg-background-light min-h-screen flex flex-col w-full pb-20 text-slate-900 font-display">
         <Routes>
-          <Route 
-            path="/login" 
-            element={isAuthenticated ? <Navigate to="/" /> : <Login setAuth={setIsAuthenticated} />} 
+          <Route
+            path="/login"
+            element={isAuthenticated ? <Navigate to="/" /> : <Login setAuth={setIsAuthenticated} />}
           />
-          <Route 
-            path="/" 
-            element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} 
+          <Route
+            path="/"
+            element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />}
           />
-          <Route 
-            path="/ticket/:id" 
-            element={isAuthenticated ? <TicketDetails /> : <Navigate to="/login" />} 
+          <Route
+            path="/ticket/:id"
+            element={isAuthenticated ? <TicketDetails /> : <Navigate to="/login" />}
           />
         </Routes>
         {isAuthenticated && <BottomNav />}
