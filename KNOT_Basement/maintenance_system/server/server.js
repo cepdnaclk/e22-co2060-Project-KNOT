@@ -69,6 +69,36 @@ const mockTickets = [
     reported_at: '2023-10-24 11:45:00',
     maintenance_notes: '',
     category: 'HVAC Maintenance'
+  },
+  {
+    id: 5,
+    ticket_number: 'KNT-1028',
+    title: 'HVAC Unit #3 making unusual noise',
+    description: 'The unit in the server room is vibrating excessively.',
+    location: 'Data Center B',
+    lat: 7.2560,
+    lng: 80.5905,
+    priority: 'Medium',
+    status: 'In Progress',
+    reported_by: 'IT Operations',
+    reported_at: '2023-10-25 08:30:00',
+    maintenance_notes: 'Inspected fans. Possible bearing failure.',
+    category: 'HVAC Maintenance'
+  },
+  {
+    id: 6,
+    ticket_number: 'KNT-1029',
+    title: 'Security camera #12 offline',
+    description: 'Video feed lost for the last 2 hours.',
+    location: 'North Gate Entrance',
+    lat: 7.2530,
+    lng: 80.5930,
+    priority: 'High',
+    status: 'Open',
+    reported_by: 'Security Team',
+    reported_at: '2023-10-25 14:20:00',
+    maintenance_notes: '',
+    category: 'Security Systems'
   }
 ];
 
@@ -150,10 +180,26 @@ app.get('/api/tickets', async (req, res) => {
     });
   } catch (error) {
     console.warn('DB error, using mock data for /api/tickets');
+    let filteredMocks = [...mockTickets];
+    const { search, priority, status } = req.query;
+
+    if (search) {
+      filteredMocks = filteredMocks.filter(t => 
+        t.title.toLowerCase().includes(search.toLowerCase()) || 
+        t.location.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+    if (priority) {
+      filteredMocks = filteredMocks.filter(t => t.priority === priority);
+    }
+    if (status) {
+      filteredMocks = filteredMocks.filter(t => t.status === status);
+    }
+
     res.json({
-      data: mockTickets,
+      data: filteredMocks,
       pagination: {
-        total: mockTickets.length,
+        total: filteredMocks.length,
         page: 1,
         limit: 10
       }

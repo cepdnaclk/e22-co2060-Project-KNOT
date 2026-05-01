@@ -1,6 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Bell, User, Filter, ChevronLeft, ChevronRight, ClipboardList, RefreshCcw, CheckCircle2 } from 'lucide-react';
+import { Bell, User, Filter, ChevronLeft, ChevronRight, ClipboardList, RefreshCcw, CheckCircle2, Map as MapIcon, List, X } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix for default leaflet icon missing in React build
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
@@ -8,25 +23,32 @@ export default function Dashboard() {
   const [pagination, setPagination] = useState(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [viewMode, setViewMode] = useState('list'); // 'list' or 'map'
+  const [filterPriority, setFilterPriority] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showReports, setShowReports] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [search, filterPriority, filterStatus]);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [statsRes, ticketsRes] = await Promise.all([
-        fetch('http://localhost:5003/api/tickets/stats'),
-        fetch('http://localhost:5003/api/tickets?limit=4') // fetch top 4 as per mockup
-      ]);
+      const statsRes = await fetch('http://localhost:5003/api/tickets/stats');
       const statsData = await statsRes.json();
-      const ticketsData = await ticketsRes.json();
-
       setStats(statsData);
+
+      let url = `http://localhost:5003/api/tickets?limit=10`;
+      if (search) url += `&search=${encodeURIComponent(search)}`;
+      if (filterPriority) url += `&priority=${filterPriority}`;
+      if (filterStatus) url += `&status=${filterStatus}`;
+
+      const ticketsRes = await fetch(url);
+      const ticketsData = await ticketsRes.json();
       setTickets(ticketsData.data);
       setPagination(ticketsData.pagination);
     } catch (err) {
@@ -42,22 +64,10 @@ export default function Dashboard() {
     window.location.reload();
   };
 
-  const handleSearch = async (e) => {
-    setSearch(e.target.value);
-    try {
-      const res = await fetch(`http://localhost:5003/api/tickets?limit=4&search=${e.target.value}`);
-      const data = await res.json();
-      setTickets(data.data);
-      setPagination(data.pagination);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  if (loading) {
+  if (loading && !tickets.length) {
     return (
       <div className="loader-container">
-        <RefreshCcw className="animate-spin" size={32} />
+        <RefreshCcw className="animate-spin text-primary" size={32} />
       </div>
     );
   }
@@ -80,21 +90,16 @@ export default function Dashboard() {
               </button>
 
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-200 text-slate-900">
                   <div className="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-                    <h3 className="font-bold text-slate-900">Notifications</h3>
+                    <h3 className="font-bold">Notifications</h3>
                     <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">2 NEW</span>
                   </div>
                   <div className="max-h-96 overflow-y-auto">
                     <div className="p-4 border-b border-slate-50 hover:bg-slate-50 cursor-pointer transition-colors">
-                      <p className="text-sm text-slate-800 font-medium">New high-priority ticket reported</p>
+                      <p className="text-sm font-medium">New high-priority ticket reported</p>
                       <p className="text-xs text-slate-500 mt-1">Water leak detected near refrigeration unit</p>
                       <p className="text-[10px] text-slate-400 mt-2">15 minutes ago</p>
-                    </div>
-                    <div className="p-4 border-b border-slate-50 hover:bg-slate-50 cursor-pointer transition-colors">
-                      <p className="text-sm text-slate-800 font-medium">Ticket #KNT-1024 updated</p>
-                      <p className="text-xs text-slate-500 mt-1">Status changed to In Progress by System</p>
-                      <p className="text-[10px] text-slate-400 mt-2">1 hour ago</p>
                     </div>
                   </div>
                   <button className="w-full py-3 text-xs font-bold text-primary hover:bg-primary/5 transition-colors border-t border-slate-100">View all notifications</button>
@@ -111,10 +116,10 @@ export default function Dashboard() {
               </button>
 
               {showProfile && (
-                <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-200 text-slate-900">
                   <div className="p-5 text-center border-b border-slate-100 bg-slate-50">
                     <div className="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center font-bold text-2xl mx-auto mb-3 shadow-inner">SA</div>
-                    <h3 className="font-bold text-slate-900">System Admin</h3>
+                    <h3 className="font-bold">System Admin</h3>
                     <p className="text-xs text-slate-500">admin@knot-platform.com</p>
                   </div>
                   <div className="p-2">
@@ -138,109 +143,207 @@ export default function Dashboard() {
 
       <main className="flex-1 max-w-5xl mx-auto w-full px-4 pb-24 pt-8">
         <section className="py-2 mb-4">
-          <h1 className="text-3xl font-bold leading-tight">Maintenance<br />Management</h1>
-          <p className="text-sm text-slate-500 mt-2">Manage and update active service tickets.</p>
+          <div className="flex justify-between items-end">
+            <div>
+              <h1 className="text-3xl font-bold leading-tight">Maintenance<br />Management</h1>
+              <p className="text-sm text-slate-500 mt-2">Manage and update active service tickets.</p>
+            </div>
+            <div className="flex bg-slate-100 p-1 rounded-xl shadow-inner mb-1">
+              <button
+                onClick={() => setViewMode('list')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${viewMode === 'list' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                <List size={16} /> List
+              </button>
+              <button
+                onClick={() => setViewMode('map')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${viewMode === 'map' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                <MapIcon size={16} /> Map
+              </button>
+            </div>
+          </div>
         </section>
 
         {stats && (
-          <section className="mb-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-lg bg-orange-100 text-orange-500 flex items-center justify-center shrink-0">
-                  <ClipboardList size={24} />
-                </div>
-                <div>
-                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Open Tickets</h3>
-                  <p className="text-2xl font-bold text-slate-900 leading-none">{stats.open}</p>
-                </div>
+          <section className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex items-center gap-4 hover:shadow-md transition-shadow">
+              <div className="w-12 h-12 rounded-lg bg-orange-100 text-orange-500 flex items-center justify-center shrink-0">
+                <ClipboardList size={24} />
               </div>
-
-              <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-lg bg-blue-100 text-blue-500 flex items-center justify-center shrink-0">
-                  <RefreshCcw size={24} />
-                </div>
-                <div>
-                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">In Progress</h3>
-                  <p className="text-2xl font-bold text-slate-900 leading-none">{stats.inProgress}</p>
-                </div>
+              <div>
+                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Open Tickets</h3>
+                <p className="text-2xl font-bold text-slate-900 leading-none">{stats.open}</p>
               </div>
+            </div>
 
-              <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-lg bg-green-100 text-green-500 flex items-center justify-center shrink-0">
-                  <CheckCircle2 size={24} />
-                </div>
-                <div>
-                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Resolved Today</h3>
-                  <p className="text-2xl font-bold text-slate-900 leading-none">{stats.resolvedToday}</p>
-                </div>
+            <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex items-center gap-4 hover:shadow-md transition-shadow">
+              <div className="w-12 h-12 rounded-lg bg-blue-100 text-blue-500 flex items-center justify-center shrink-0">
+                <RefreshCcw size={24} />
+              </div>
+              <div>
+                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">In Progress</h3>
+                <p className="text-2xl font-bold text-slate-900 leading-none">{stats.inProgress}</p>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex items-center gap-4 hover:shadow-md transition-shadow">
+              <div className="w-12 h-12 rounded-lg bg-green-100 text-green-500 flex items-center justify-center shrink-0">
+                <CheckCircle2 size={24} />
+              </div>
+              <div>
+                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Resolved Today</h3>
+                <p className="text-2xl font-bold text-slate-900 leading-none">{stats.resolvedToday}</p>
               </div>
             </div>
           </section>
         )}
 
         <section className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold">Active Tickets</h2>
-          </div>
-
-          <div className="flex items-center gap-2 mb-4">
-            <div className="relative flex-1">
+          <div className="flex flex-col sm:flex-row items-center gap-2 mb-4">
+            <div className="relative flex-1 w-full">
               <input
                 type="text"
                 className="w-full border border-slate-200 bg-white rounded-xl py-3 pl-4 pr-10 text-sm focus:border-primary shadow-sm outline-none transition-colors"
                 placeholder="Search locations or issues..."
                 value={search}
-                onChange={handleSearch}
+                onChange={(e) => setSearch(e.target.value)}
               />
+              {search && (
+                <button
+                  onClick={() => setSearch('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  <X size={16} />
+                </button>
+              )}
             </div>
-            <button className="flex items-center justify-center gap-2 px-4 py-3 bg-white border border-slate-200 rounded-xl shadow-sm text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors">
-              <Filter size={18} /> <span className="hidden sm:inline">Filters</span>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex items-center justify-center gap-2 px-4 py-3 bg-white border border-slate-200 rounded-xl shadow-sm text-sm font-bold transition-colors ${showFilters ? 'text-primary border-primary bg-primary/5' : 'text-slate-700 hover:bg-slate-50'}`}
+            >
+              <Filter size={18} /> Filters {(filterPriority || filterStatus) && <span className="w-2 h-2 bg-primary rounded-full"></span>}
             </button>
           </div>
 
-          <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-sm">
-            <div className="hidden sm:flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50 text-xs font-bold text-slate-500 uppercase tracking-wider">
-              <div className="flex-[2]">Location & Issue</div>
-              <div className="flex-1 text-center">Priority</div>
-              <div className="flex-1 text-right">Reported By</div>
+          {showFilters && (
+            <div className="bg-white border border-slate-100 rounded-xl p-4 mb-4 shadow-sm flex flex-wrap gap-4 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="flex-1 min-w-[150px]">
+                <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Priority</label>
+                <select
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary"
+                  value={filterPriority}
+                  onChange={(e) => setFilterPriority(e.target.value)}
+                >
+                  <option value="">All Priorities</option>
+                  <option value="High">High</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Low">Low</option>
+                </select>
+              </div>
+              <div className="flex-1 min-w-[150px]">
+                <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Status</label>
+                <select
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary"
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                >
+                  <option value="">All Statuses</option>
+                  <option value="Open">Open</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Resolved">Resolved</option>
+                </select>
+              </div>
+              <div className="flex items-end">
+                <button
+                  onClick={() => { setFilterPriority(''); setFilterStatus(''); }}
+                  className="text-xs font-bold text-red-500 hover:text-red-600 mb-2"
+                >
+                  Reset
+                </button>
+              </div>
             </div>
+          )}
 
-            {tickets.map((ticket, index) => (
-              <Link to={`/ticket/${ticket.id}`} key={ticket.id} className={`block p-4 sm:flex items-center justify-between transition-colors hover:bg-slate-50 ${index !== tickets.length - 1 ? 'border-b border-slate-50' : ''}`}>
-                <div className="flex-[2] mb-3 sm:mb-0">
-                  <p className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">location_on</span> {ticket.location}</p>
-                  <h3 className="text-sm font-bold text-slate-900 leading-tight">{ticket.title}</h3>
+          {viewMode === 'list' ? (
+            <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-sm">
+              <div className="hidden sm:flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                <div className="flex-[2]">Location & Issue</div>
+                <div className="flex-1 text-center">Priority</div>
+                <div className="flex-1 text-right">Reported By</div>
+              </div>
+
+              <div className="animate-stagger-fade-in">
+                {tickets.map((ticket, index) => (
+                  <Link to={`/ticket/${ticket.id}`} key={ticket.id} className={`block p-4 sm:flex items-center justify-between transition-colors hover:bg-slate-50 ${index !== tickets.length - 1 ? 'border-b border-slate-50' : ''}`}>
+                    <div className="flex-[2] mb-3 sm:mb-0">
+                      <p className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[14px]">location_on</span> {ticket.location}
+                      </p>
+                      <h3 className="text-sm font-bold text-slate-900 leading-tight">{ticket.title}</h3>
+                    </div>
+
+                    <div className="flex-1 flex sm:justify-center mb-3 sm:mb-0">
+                      <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider ${ticket.priority === 'High' ? 'bg-red-100 text-red-700' :
+                        ticket.priority === 'Medium' ? 'bg-orange-100 text-orange-700' :
+                          'bg-slate-100 text-slate-600'
+                        }`}>
+                        {ticket.priority}
+                      </span>
+                    </div>
+
+                    <div className="flex-1 flex flex-col sm:items-end text-left sm:text-right">
+                      <span className="text-sm font-bold text-slate-900">{ticket.reported_by}</span>
+                      <span className="text-[11px] font-medium text-slate-500 mt-0.5">
+                        {new Date(ticket.reported_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+
+              {tickets.length === 0 && (
+                <div className="p-12 text-center text-slate-500">
+                  <ClipboardList className="mx-auto mb-3 opacity-20" size={48} />
+                  <p className="font-bold">No tickets found</p>
+                  <p className="text-xs">Try adjusting your filters or search terms.</p>
                 </div>
+              )}
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-sm h-[500px]">
+              <MapContainer center={[7.2546, 80.5912]} zoom={15} scrollWheelZoom={true} style={{ height: '100%', width: '100%' }}>
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                {tickets.map(ticket => (
+                  <Marker key={ticket.id} position={[ticket.lat || 7.2546, ticket.lng || 80.5912]}>
+                    <Popup>
+                      <div className="p-1">
+                        <div className="text-[10px] font-bold text-primary uppercase mb-1">#{ticket.ticket_number}</div>
+                        <div className="font-bold text-sm text-slate-900 mb-1">{ticket.title}</div>
+                        <div className="text-xs text-slate-500 mb-2 flex items-center gap-1">
+                          <MapIcon size={10} /> {ticket.location}
+                        </div>
+                        <Link to={`/ticket/${ticket.id}`} className="block text-center py-1.5 bg-primary text-white text-[10px] font-bold rounded-md hover:bg-primary/90 transition-colors">
+                          View Details
+                        </Link>
+                      </div>
+                    </Popup>
+                  </Marker>
+                ))}
+              </MapContainer>
+            </div>
+          )}
 
-                <div className="flex-1 flex sm:justify-center mb-3 sm:mb-0">
-                  <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider ${ticket.priority === 'High' ? 'bg-red-100 text-red-700' :
-                      ticket.priority === 'Medium' ? 'bg-orange-100 text-orange-700' :
-                        'bg-slate-100 text-slate-600'
-                    }`}>
-                    {ticket.priority}
-                  </span>
-                </div>
-
-                <div className="flex-1 flex flex-col sm:items-end text-left sm:text-right">
-                  <span className="text-sm font-bold text-slate-900">{ticket.reported_by}</span>
-                  <span className="text-[11px] font-medium text-slate-500 mt-0.5">{new Date(ticket.reported_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                </div>
-              </Link>
-            ))}
-
-            {tickets.length === 0 && (
-              <div className="p-8 text-center text-slate-500">No tickets found matching your search.</div>
-            )}
-          </div>
-
-          {pagination && tickets.length > 0 && (
+          {pagination && tickets.length > 0 && viewMode === 'list' && (
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 px-2">
               <span className="text-xs font-bold text-slate-500">Showing {tickets.length} of {pagination.total} tickets</span>
               <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
                 <button className="px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-900 disabled:opacity-50" disabled><ChevronLeft size={16} /></button>
                 <button className="w-8 h-8 rounded-md bg-primary text-white text-sm font-bold flex items-center justify-center">1</button>
-                <button className="w-8 h-8 rounded-md text-slate-600 text-sm font-bold flex items-center justify-center hover:bg-slate-100">2</button>
-                <button className="px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-900"><ChevronRight size={16} /></button>
+                <button className="px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-900 disabled:opacity-50" disabled><ChevronRight size={16} /></button>
               </div>
             </div>
           )}
@@ -248,7 +351,9 @@ export default function Dashboard() {
 
         {stats && (
           <section className="mb-8">
-            <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg> Resolution Rate</h2>
+            <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+              <RefreshCcw size={18} /> Resolution Rate
+            </h2>
             <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
               <div className="space-y-5">
                 {stats.resolutionRates.map((rate, idx) => {
@@ -260,7 +365,7 @@ export default function Dashboard() {
                         <span className="text-sm font-bold text-slate-900">{rate.rate}%</span>
                       </div>
                       <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                        <div className={`h-full ${colors[idx]} rounded-full`} style={{ width: `${rate.rate}%` }}></div>
+                        <div className={`h-full ${colors[idx]} rounded-full transition-all duration-1000`} style={{ width: `${rate.rate}%` }}></div>
                       </div>
                     </div>
                   )
@@ -284,10 +389,10 @@ export default function Dashboard() {
       {showReports && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-              <h2 className="text-xl font-bold text-slate-900">Maintenance Resolution Analysis</h2>
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 text-slate-900">
+              <h2 className="text-xl font-bold">Maintenance Resolution Analysis</h2>
               <button onClick={() => setShowReports(false)} className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-200 transition-all">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                <X size={24} />
               </button>
             </div>
             <div className="p-8">
