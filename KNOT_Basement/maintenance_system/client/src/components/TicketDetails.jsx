@@ -1,21 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MoreVertical, MapPin, User, Check, Users, CheckCircle2, Camera, Save, RefreshCcw, X, AlertCircle } from 'lucide-react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { ChevronLeft, MapPin, Clock, User, AlertCircle, CheckCircle2, Save, Map as MapIcon, Camera, History, Wrench, RefreshCcw } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-// Fix for default leaflet icon missing in React build
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x,
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-});
+// Re-center map component
+function ChangeView({ center }) {
+  const map = useMap();
+  map.setView(center, map.getZoom());
+  return null;
+}
 
 export default function TicketDetails() {
   const { id } = useParams();
@@ -23,10 +18,11 @@ export default function TicketDetails() {
   const [ticket, setTicket] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [status, setStatus] = useState('');
   const [notes, setNotes] = useState('');
-  const [photoPreview, setPhotoPreview] = useState(null);
+  const [status, setStatus] = useState('');
+  const [photo, setPhoto] = useState(null);
   const [error, setError] = useState('');
+  const [assignedTo, setAssignedTo] = useState('');
 
   useEffect(() => {
     fetchTicket();
@@ -37,9 +33,9 @@ export default function TicketDetails() {
       const res = await fetch(`http://localhost:5003/api/tickets/${id}`);
       const data = await res.json();
       setTicket(data);
-      setStatus(data.status);
       setNotes(data.maintenance_notes || '');
-      if (data.photo_url) setPhotoPreview(data.photo_url);
+      setStatus(data.status);
+      setAssignedTo(data.assigned_to || '');
     } catch (err) {
       console.error(err);
     } finally {
@@ -52,232 +48,221 @@ export default function TicketDetails() {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPhotoPreview(reader.result);
+        setPhoto(reader.result);
       };
       reader.readAsDataURL(file);
     }
   };
 
   const handleSave = async () => {
-    if (status === 'Resolved' && notes.trim().length < 5) {
-      setError('Please provide detailed maintenance notes before resolving.');
+    if (status === 'Resolved' && notes.trim().length < 10) {
+      setError('Please provide detailed maintenance notes (min 10 chars) before resolving.');
       return;
     }
-
     setError('');
     setSaving(true);
     try {
-      const res = await fetch(`http://localhost:5003/api/tickets/${id}`, {
+      await fetch(`http://localhost:5003/api/tickets/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          status, 
+        body: JSON.stringify({
+          status,
           maintenance_notes: notes,
-          photo_url: photoPreview // Simulate saving the data URL
-        })
+          photo_url: photo,
+          assigned_to: assignedTo
+        }),
       });
-      if (res.ok) {
-        navigate('/');
-      }
+      navigate('/');
     } catch (err) {
-      console.error("Error saving ticket", err);
-      setError('Failed to save changes. Please try again.');
+      console.error(err);
     } finally {
       setSaving(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="loader-container">
-        <RefreshCcw className="animate-spin text-primary" size={32} />
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="flex items-center justify-center h-screen dark:bg-slate-950">
+      <RefreshCcw className="animate-spin text-primary" size={32} />
+    </div>
+  );
 
-  if (!ticket) {
-    return (
-      <div className="p-8 text-center">
-        <AlertCircle className="mx-auto mb-4 text-red-500" size={48} />
-        <h2 className="text-xl font-bold">Ticket not found</h2>
-        <button onClick={() => navigate('/')} className="mt-4 text-primary font-bold">Back to Dashboard</button>
-      </div>
-    );
-  }
-
-  const steps = ['Open', 'In Progress', 'Resolved'];
-  const currentStepIndex = steps.indexOf(status);
-  const position = [ticket.lat || 7.2546, ticket.lng || 80.5912];
+  if (!ticket) return (
+    <div className="p-8 text-center dark:bg-slate-950 min-h-screen pt-20">
+      <AlertCircle className="mx-auto mb-4 text-red-500" size={48} />
+      <h2 className="text-xl font-bold dark:text-white">Ticket Not Found</h2>
+      <button onClick={() => navigate('/')} className="mt-4 text-primary font-bold">Return to Dashboard</button>
+    </div>
+  );
 
   return (
-    <>
-      <nav className="sticky top-0 z-50 bg-slate-900 border-b border-slate-800 px-4 py-4 flex items-center justify-between text-white">
-        <button className="flex items-center gap-2 hover:opacity-80 transition-opacity" onClick={() => navigate(-1)}>
-          <ArrowLeft size={20} />
-          <span className="font-bold">Ticket Details</span>
-        </button>
-        <div className="flex items-center gap-3">
-          <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${ticket.priority === 'High' ? 'bg-red-500/20 text-red-400' :
-              ticket.priority === 'Medium' ? 'bg-orange-500/20 text-orange-400' :
-                'bg-slate-700 text-slate-300'
-            }`}>
-            {ticket.priority} PRIORITY
-          </span>
-          <MoreVertical size={20} className="text-slate-400" />
-        </div>
-      </nav>
+    <main className="flex-1 max-w-4xl mx-auto w-full px-4 pt-6 pb-24 animate-in fade-in duration-500">
+      <button
+        onClick={() => navigate('/')}
+        className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-900 mb-6 transition-colors dark:text-slate-400 dark:hover:text-white"
+      >
+        <ChevronLeft size={18} /> Back to Dashboard
+      </button>
 
-      <main className="flex-1 max-w-2xl mx-auto w-full px-4 pt-6 pb-24">
-        <div className="mb-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <div className="flex items-center gap-3 mb-2">
-            <span className="text-sm font-bold text-slate-500 bg-slate-200 px-2 py-0.5 rounded uppercase">#{ticket.ticket_number || ticket.id}</span>
-            <div className="text-xs font-bold text-slate-400 uppercase">
-              Reported on <span className="text-primary">{new Date(ticket.reported_at).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-            </div>
-          </div>
-          <h1 className="text-2xl font-bold leading-tight mt-1 text-slate-900">{ticket.title}</h1>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 flex flex-col gap-2 hover:shadow-md transition-shadow">
-            <div className="w-8 h-8 rounded-full bg-blue-50 text-primary flex items-center justify-center">
-              <MapPin size={16} />
-            </div>
-            <div>
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Location</label>
-              <p className="text-sm font-bold text-slate-900 leading-snug mt-0.5">{ticket.location}</p>
-            </div>
-          </div>
-          <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 flex flex-col gap-2 hover:shadow-md transition-shadow">
-            <div className="w-8 h-8 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center">
-              <User size={16} />
-            </div>
-            <div>
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Reported By</label>
-              <p className="text-sm font-bold text-slate-900 leading-snug mt-0.5">{ticket.reported_by}</p>
-            </div>
-          </div>
-        </div>
-
-        <section className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden mb-6">
-          <div className="h-64 w-full bg-slate-100 relative">
-            <MapContainer center={position} zoom={16} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              <Marker position={position}>
-                <Popup>
-                  <div className="font-bold text-sm">{ticket.location}</div>
-                  <div className="text-xs text-slate-500 mt-1">{ticket.title}</div>
-                </Popup>
-              </Marker>
-            </MapContainer>
-          </div>
-          <div className="p-4 bg-slate-50 border-t border-slate-100">
-            <p className="text-xs font-medium text-slate-500 flex items-center gap-2">
-              <MapPin size={14} /> Exact coordinates: {position[0].toFixed(4)}, {position[1].toFixed(4)}
-            </p>
-          </div>
-        </section>
-
-        <section className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 mb-6">
-          <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-6">Current Status</h2>
-
-          <div className="flex items-center justify-between mb-8 relative">
-            <div className="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-1 bg-slate-100 -z-10 rounded-full">
-              <div className="h-full bg-primary transition-all duration-500" style={{ width: `${(currentStepIndex / (steps.length - 1)) * 100}%` }}></div>
-            </div>
-            {steps.map((s, idx) => {
-              const isCompleted = idx < currentStepIndex;
-              const isCurrent = idx === currentStepIndex;
-              return (
-                <div key={s} className="flex flex-col items-center gap-2 bg-white px-2">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center border-4 border-white shadow-sm transition-all duration-300 ${isCompleted ? 'bg-primary text-white' :
-                      isCurrent ? 'bg-white border-2 border-primary text-primary scale-110' :
-                        'bg-slate-100 text-slate-400'
-                    }`}>
-                    {isCompleted ? <Check size={16} /> : (idx === 1 ? <Users size={16} /> : <CheckCircle2 size={16} />)}
-                  </div>
-                  <span className={`text-[10px] uppercase tracking-wider font-bold ${isCurrent || isCompleted ? 'text-slate-900' : 'text-slate-400'}`}>{s}</span>
-                </div>
-              );
-            })}
-          </div>
-
-          <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Update Status</h2>
-          <div className="flex flex-wrap gap-2">
-            {steps.map(s => (
-              <button
-                key={s}
-                className={`flex-1 py-2.5 px-4 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border ${status === s
-                    ? 'bg-primary border-primary text-white shadow-md shadow-primary/20 transform scale-105'
-                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                  }`}
-                onClick={() => setStatus(s)}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <section className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 mb-6">
-          <h2 className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
-            <Camera size={16} /> Evidence Photo
-          </h2>
-          
-          <div className="relative group">
-            {photoPreview ? (
-              <div className="relative rounded-xl overflow-hidden aspect-video bg-slate-100 border border-slate-200">
-                <img src={photoPreview} alt="Evidence" className="w-full h-full object-cover" />
-                <button 
-                  onClick={() => setPhotoPreview(null)}
-                  className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-colors"
-                >
-                  <X size={16} />
-                </button>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <section className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 dark:bg-slate-800 dark:border-slate-700">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <span className="text-xs font-bold text-primary uppercase tracking-widest mb-1 block">#{ticket.ticket_number}</span>
+                <h1 className="text-2xl font-bold text-slate-900 leading-tight dark:text-white">{ticket.title}</h1>
               </div>
-            ) : (
-              <label className="flex flex-col items-center justify-center w-full aspect-video border-2 border-dashed border-slate-200 rounded-xl bg-slate-50 hover:bg-slate-100 hover:border-primary/50 transition-all cursor-pointer group">
-                <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                  <Camera className="w-10 h-10 text-slate-400 group-hover:text-primary transition-colors mb-2" />
-                  <p className="text-sm font-bold text-slate-500 group-hover:text-primary">Tap to take photo</p>
-                  <p className="text-[10px] text-slate-400 mt-1 uppercase font-medium">PNG, JPG up to 5MB</p>
+              <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${ticket.priority === 'High' ? 'bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400'}`}>
+                {ticket.priority} Priority
+              </div>
+            </div>
+
+            <p className="text-slate-600 mb-6 dark:text-slate-300">{ticket.description}</p>
+
+            <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-xl dark:bg-slate-900">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-slate-400 dark:bg-slate-800">
+                  <User size={16} />
                 </div>
-                <input type="file" className="hidden" accept="image/*" onChange={handlePhotoUpload} />
-              </label>
-            )}
-          </div>
-        </section>
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">Reporter</p>
+                  <p className="text-xs font-bold text-slate-700 dark:text-slate-200">{ticket.reported_by}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-slate-400 dark:bg-slate-800">
+                  <Clock size={16} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">Reported At</p>
+                  <p className="text-xs font-bold text-slate-700 dark:text-slate-200">{new Date(ticket.reported_at).toLocaleString()}</p>
+                </div>
+              </div>
+            </div>
+          </section>
 
-        <section className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 mb-6">
-          <h2 className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-            Maintenance Notes
-          </h2>
-          <textarea
-            className={`w-full bg-slate-50 border ${error ? 'border-red-300 ring-1 ring-red-300' : 'border-slate-200'} rounded-xl p-4 text-sm text-slate-700 min-h-[120px] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-400 resize-y`}
-            value={notes}
-            onChange={(e) => { setNotes(e.target.value); setError(''); }}
-            placeholder="Add notes about the maintenance performed..."
-          />
-          {error && (
-            <p className="flex items-center gap-1.5 text-red-500 text-[11px] font-bold mt-2">
-              <AlertCircle size={12} /> {error}
-            </p>
-          )}
-        </section>
+          <section className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 dark:bg-slate-800 dark:border-slate-700">
+            <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2 dark:text-white">
+              <Wrench size={18} className="text-primary" /> Maintenance Actions
+            </h3>
 
+            <div className="space-y-4">
+              <div>
+                <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Assigned Technician</label>
+                <select
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-primary transition-all dark:bg-slate-900 dark:border-slate-700 dark:text-white"
+                  value={assignedTo}
+                  onChange={(e) => setAssignedTo(e.target.value)}
+                >
+                  <option value="">Unassigned</option>
+                  <option value="Alex Technician">Alex Technician</option>
+                  <option value="Sarah Engineer">Sarah Engineer</option>
+                  <option value="John Repairman">John Repairman</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Current Status</label>
+                <div className="flex gap-2">
+                  {['Open', 'In Progress', 'Resolved'].map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => setStatus(s)}
+                      className={`flex-1 py-2.5 rounded-xl text-xs font-bold border transition-all ${status === s ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20' : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300 dark:bg-slate-800 dark:border-slate-700'}`}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Maintenance Notes</label>
+                <textarea
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-primary transition-all min-h-[120px] dark:bg-slate-900 dark:border-slate-700 dark:text-white"
+                  placeholder="Describe the work performed..."
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                ></textarea>
+                {error && <p className="text-red-500 text-[10px] font-bold mt-1 flex items-center gap-1"><AlertCircle size={12} /> {error}</p>}
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-slate-400 uppercase mb-2 block">Resolution Photos</label>
+                <div className="flex gap-3 overflow-x-auto pb-2">
+                  <label className="w-24 h-24 rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 cursor-pointer hover:border-primary hover:text-primary transition-all shrink-0 dark:border-slate-700">
+                    <Camera size={24} />
+                    <span className="text-[10px] font-bold mt-1">Add Photo</span>
+                    <input type="file" className="hidden" accept="image/*" onChange={handlePhotoUpload} />
+                  </label>
+                  {(photo || ticket.photo_url) && (
+                    <div className="relative w-24 h-24 rounded-xl overflow-hidden shrink-0 group">
+                      <img src={photo || ticket.photo_url} alt="Evidence" className="w-full h-full object-cover" />
+                      <button onClick={() => setPhoto(null)} className="absolute top-1 right-1 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                        <ChevronLeft size={12} className="rotate-45" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div className="space-y-6">
+          <section className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden dark:bg-slate-800 dark:border-slate-700">
+            <div className="p-4 border-b border-slate-50 flex items-center gap-2 dark:border-slate-700">
+              <MapIcon size={18} className="text-primary" />
+              <h3 className="font-bold text-sm dark:text-white">Fault Location</h3>
+            </div>
+            <div className="h-48 relative">
+              <MapContainer center={[ticket.lat || 7.2546, ticket.lng || 80.5912]} zoom={17} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
+                <ChangeView center={[ticket.lat || 7.2546, ticket.lng || 80.5912]} />
+                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                <Marker position={[ticket.lat || 7.2546, ticket.lng || 80.5912]} />
+              </MapContainer>
+            </div>
+            <div className="p-4 bg-slate-50 dark:bg-slate-900/50">
+              <p className="text-xs font-bold text-slate-700 flex items-center gap-1 dark:text-slate-300">
+                <MapPin size={14} className="text-primary" /> {ticket.location}
+              </p>
+            </div>
+          </section>
+
+          <section className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 dark:bg-slate-800 dark:border-slate-700">
+            <h3 className="font-bold text-sm text-slate-900 mb-4 flex items-center gap-2 dark:text-white">
+              <History size={18} className="text-primary" /> Ticket History
+            </h3>
+            <div className="space-y-4">
+              {ticket.history && ticket.history.length > 0 ? (
+                ticket.history.map((log, i) => (
+                  <div key={i} className="flex gap-3 relative">
+                    {i !== ticket.history.length - 1 && <div className="absolute left-2 top-4 bottom-0 w-0.5 bg-slate-100 dark:bg-slate-700"></div>}
+                    <div className={`w-4 h-4 rounded-full mt-1 shrink-0 ${log.status === 'Resolved' ? 'bg-green-500' : log.status === 'In Progress' ? 'bg-blue-500' : 'bg-slate-300'}`}></div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-900 dark:text-white">{log.status}</p>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400">{new Date(log.timestamp).toLocaleString()}</p>
+                      <p className="text-[11px] text-slate-600 mt-1 dark:text-slate-300">{log.note}</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-xs text-slate-400 italic">No history logs yet.</p>
+              )}
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <div className="fixed bottom-24 left-4 right-4 max-w-4xl mx-auto z-[60]">
         <button
-          className="w-full bg-primary text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:bg-primary/90 transition-colors disabled:opacity-50"
           onClick={handleSave}
           disabled={saving}
+          className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold flex items-center justify-center gap-2 shadow-2xl hover:bg-slate-800 transition-all disabled:opacity-50 dark:bg-primary dark:hover:bg-primary/90"
         >
           {saving ? <RefreshCcw className="animate-spin" size={20} /> : <Save size={20} />}
-          {saving ? 'Saving...' : 'Save Changes'}
+          Update Ticket Records
         </button>
-      </main>
-    </>
+      </div>
+    </main>
   );
 }

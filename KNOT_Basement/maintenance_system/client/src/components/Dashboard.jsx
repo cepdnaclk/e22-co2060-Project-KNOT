@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Bell, User, Filter, ChevronLeft, ChevronRight, ClipboardList, RefreshCcw, CheckCircle2, Map as MapIcon, List, X } from 'lucide-react';
+import { Bell, User, Filter, ChevronLeft, ChevronRight, ClipboardList, RefreshCcw, CheckCircle2, Map as MapIcon, List, X, TrendingUp } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -16,6 +16,24 @@ L.Icon.Default.mergeOptions({
   iconUrl: markerIcon,
   shadowUrl: markerShadow,
 });
+
+const MiniChart = ({ data, color }) => {
+  if (!data || data.length < 2) return <div className="h-12 flex items-center text-[10px] text-slate-400">Insufficient data</div>;
+  const max = Math.max(...data) || 1;
+  const points = data.map((d, i) => `${(i / (data.length - 1)) * 100},${100 - (d / max) * 100}`).join(' ');
+  return (
+    <svg viewBox="0 0 100 100" className="w-full h-12 overflow-visible">
+      <polyline
+        fill="none"
+        stroke={color}
+        strokeWidth="4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        points={points}
+      />
+    </svg>
+  );
+};
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
@@ -66,7 +84,7 @@ export default function Dashboard() {
 
   if (loading && !tickets.length) {
     return (
-      <div className="loader-container">
+      <div className="loader-container dark:bg-slate-950/80">
         <RefreshCcw className="animate-spin text-primary" size={32} />
       </div>
     );
@@ -90,19 +108,19 @@ export default function Dashboard() {
               </button>
 
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-200 text-slate-900">
-                  <div className="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-200 text-slate-900 dark:bg-slate-800 dark:border-slate-700 dark:text-white">
+                  <div className="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center dark:bg-slate-900 dark:border-slate-700">
                     <h3 className="font-bold">Notifications</h3>
                     <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">2 NEW</span>
                   </div>
                   <div className="max-h-96 overflow-y-auto">
-                    <div className="p-4 border-b border-slate-50 hover:bg-slate-50 cursor-pointer transition-colors">
+                    <div className="p-4 border-b border-slate-50 hover:bg-slate-50 cursor-pointer transition-colors dark:hover:bg-slate-700 dark:border-slate-700">
                       <p className="text-sm font-medium">New high-priority ticket reported</p>
-                      <p className="text-xs text-slate-500 mt-1">Water leak detected near refrigeration unit</p>
+                      <p className="text-xs text-slate-500 mt-1 dark:text-slate-400">Water leak detected near refrigeration unit</p>
                       <p className="text-[10px] text-slate-400 mt-2">15 minutes ago</p>
                     </div>
                   </div>
-                  <button className="w-full py-3 text-xs font-bold text-primary hover:bg-primary/5 transition-colors border-t border-slate-100">View all notifications</button>
+                  <button className="w-full py-3 text-xs font-bold text-primary hover:bg-primary/5 transition-colors border-t border-slate-100 dark:border-slate-700 dark:hover:bg-primary/10">View all notifications</button>
                 </div>
               )}
             </div>
@@ -116,18 +134,18 @@ export default function Dashboard() {
               </button>
 
               {showProfile && (
-                <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-200 text-slate-900">
-                  <div className="p-5 text-center border-b border-slate-100 bg-slate-50">
+                <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-200 text-slate-900 dark:bg-slate-800 dark:border-slate-700 dark:text-white">
+                  <div className="p-5 text-center border-b border-slate-100 bg-slate-50 dark:bg-slate-900 dark:border-slate-700">
                     <div className="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center font-bold text-2xl mx-auto mb-3 shadow-inner">SA</div>
                     <h3 className="font-bold">System Admin</h3>
-                    <p className="text-xs text-slate-500">admin@knot-platform.com</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">admin@knot-platform.com</p>
                   </div>
                   <div className="p-2">
-                    <button className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 rounded-lg transition-colors flex items-center gap-3">
+                    <button className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 rounded-lg transition-colors flex items-center gap-3 dark:text-slate-300 dark:hover:bg-slate-700">
                       <User size={16} /> My Account
                     </button>
                     <button
-                      className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-3"
+                      className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-3 dark:hover:bg-red-500/10"
                       onClick={handleLogout}
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
@@ -146,18 +164,18 @@ export default function Dashboard() {
           <div className="flex justify-between items-end">
             <div>
               <h1 className="text-3xl font-bold leading-tight">Maintenance<br />Management</h1>
-              <p className="text-sm text-slate-500 mt-2">Manage and update active service tickets.</p>
+              <p className="text-sm text-slate-500 mt-2 dark:text-slate-400">Manage and update active service tickets.</p>
             </div>
-            <div className="flex bg-slate-100 p-1 rounded-xl shadow-inner mb-1">
+            <div className="flex bg-slate-100 p-1 rounded-xl shadow-inner mb-1 dark:bg-slate-800">
               <button
                 onClick={() => setViewMode('list')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${viewMode === 'list' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${viewMode === 'list' ? 'bg-white text-primary shadow-sm dark:bg-slate-700 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
               >
                 <List size={16} /> List
               </button>
               <button
                 onClick={() => setViewMode('map')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${viewMode === 'map' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${viewMode === 'map' ? 'bg-white text-primary shadow-sm dark:bg-slate-700 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
               >
                 <MapIcon size={16} /> Map
               </button>
@@ -167,33 +185,33 @@ export default function Dashboard() {
 
         {stats && (
           <section className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex items-center gap-4 hover:shadow-md transition-shadow">
-              <div className="w-12 h-12 rounded-lg bg-orange-100 text-orange-500 flex items-center justify-center shrink-0">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex items-center gap-4 hover:shadow-md transition-shadow dark:bg-slate-800 dark:border-slate-700">
+              <div className="w-12 h-12 rounded-lg bg-orange-100 text-orange-500 flex items-center justify-center shrink-0 dark:bg-orange-500/10">
                 <ClipboardList size={24} />
               </div>
               <div>
-                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Open Tickets</h3>
-                <p className="text-2xl font-bold text-slate-900 leading-none">{stats.open}</p>
+                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 dark:text-slate-400">Open Tickets</h3>
+                <p className="text-2xl font-bold text-slate-900 leading-none dark:text-white">{stats.open}</p>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex items-center gap-4 hover:shadow-md transition-shadow">
-              <div className="w-12 h-12 rounded-lg bg-blue-100 text-blue-500 flex items-center justify-center shrink-0">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex items-center gap-4 hover:shadow-md transition-shadow dark:bg-slate-800 dark:border-slate-700">
+              <div className="w-12 h-12 rounded-lg bg-blue-100 text-blue-500 flex items-center justify-center shrink-0 dark:bg-blue-500/10">
                 <RefreshCcw size={24} />
               </div>
               <div>
-                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">In Progress</h3>
-                <p className="text-2xl font-bold text-slate-900 leading-none">{stats.inProgress}</p>
+                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 dark:text-slate-400">In Progress</h3>
+                <p className="text-2xl font-bold text-slate-900 leading-none dark:text-white">{stats.inProgress}</p>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex items-center gap-4 hover:shadow-md transition-shadow">
-              <div className="w-12 h-12 rounded-lg bg-green-100 text-green-500 flex items-center justify-center shrink-0">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex items-center gap-4 hover:shadow-md transition-shadow dark:bg-slate-800 dark:border-slate-700">
+              <div className="w-12 h-12 rounded-lg bg-green-100 text-green-500 flex items-center justify-center shrink-0 dark:bg-green-500/10">
                 <CheckCircle2 size={24} />
               </div>
               <div>
-                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Resolved Today</h3>
-                <p className="text-2xl font-bold text-slate-900 leading-none">{stats.resolvedToday}</p>
+                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 dark:text-slate-400">Resolved Today</h3>
+                <p className="text-2xl font-bold text-slate-900 leading-none dark:text-white">{stats.resolvedToday}</p>
               </div>
             </div>
           </section>
@@ -204,7 +222,7 @@ export default function Dashboard() {
             <div className="relative flex-1 w-full">
               <input
                 type="text"
-                className="w-full border border-slate-200 bg-white rounded-xl py-3 pl-4 pr-10 text-sm focus:border-primary shadow-sm outline-none transition-colors"
+                className="w-full border border-slate-200 bg-white rounded-xl py-3 pl-4 pr-10 text-sm focus:border-primary shadow-sm outline-none transition-colors dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                 placeholder="Search locations or issues..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -212,7 +230,7 @@ export default function Dashboard() {
               {search && (
                 <button
                   onClick={() => setSearch('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
                 >
                   <X size={16} />
                 </button>
@@ -220,18 +238,18 @@ export default function Dashboard() {
             </div>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center justify-center gap-2 px-4 py-3 bg-white border border-slate-200 rounded-xl shadow-sm text-sm font-bold transition-colors ${showFilters ? 'text-primary border-primary bg-primary/5' : 'text-slate-700 hover:bg-slate-50'}`}
+              className={`flex items-center justify-center gap-2 px-4 py-3 bg-white border border-slate-200 rounded-xl shadow-sm text-sm font-bold transition-colors dark:bg-slate-800 dark:border-slate-700 ${showFilters ? 'text-primary border-primary bg-primary/5 dark:bg-primary/10' : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-700'}`}
             >
               <Filter size={18} /> Filters {(filterPriority || filterStatus) && <span className="w-2 h-2 bg-primary rounded-full"></span>}
             </button>
           </div>
 
           {showFilters && (
-            <div className="bg-white border border-slate-100 rounded-xl p-4 mb-4 shadow-sm flex flex-wrap gap-4 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="bg-white border border-slate-100 rounded-xl p-4 mb-4 shadow-sm flex flex-wrap gap-4 animate-in fade-in slide-in-from-top-2 duration-200 dark:bg-slate-800 dark:border-slate-700">
               <div className="flex-1 min-w-[150px]">
                 <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Priority</label>
                 <select
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary dark:bg-slate-900 dark:border-slate-700 dark:text-white"
                   value={filterPriority}
                   onChange={(e) => setFilterPriority(e.target.value)}
                 >
@@ -244,7 +262,7 @@ export default function Dashboard() {
               <div className="flex-1 min-w-[150px]">
                 <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Status</label>
                 <select
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary dark:bg-slate-900 dark:border-slate-700 dark:text-white"
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
                 >
@@ -266,8 +284,8 @@ export default function Dashboard() {
           )}
 
           {viewMode === 'list' ? (
-            <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-sm">
-              <div className="hidden sm:flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50 text-xs font-bold text-slate-500 uppercase tracking-wider">
+            <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-sm dark:bg-slate-800 dark:border-slate-700">
+              <div className="hidden sm:flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50 text-xs font-bold text-slate-500 uppercase tracking-wider dark:bg-slate-900 dark:border-slate-700">
                 <div className="flex-[2]">Location & Issue</div>
                 <div className="flex-1 text-center">Priority</div>
                 <div className="flex-1 text-right">Reported By</div>
@@ -275,26 +293,26 @@ export default function Dashboard() {
 
               <div className="animate-stagger-fade-in">
                 {tickets.map((ticket, index) => (
-                  <Link to={`/ticket/${ticket.id}`} key={ticket.id} className={`block p-4 sm:flex items-center justify-between transition-colors hover:bg-slate-50 ${index !== tickets.length - 1 ? 'border-b border-slate-50' : ''}`}>
+                  <Link to={`/ticket/${ticket.id}`} key={ticket.id} className={`block p-4 sm:flex items-center justify-between transition-colors hover:bg-slate-50 dark:hover:bg-slate-700/50 ${index !== tickets.length - 1 ? 'border-b border-slate-50 dark:border-slate-700' : ''}`}>
                     <div className="flex-[2] mb-3 sm:mb-0">
-                      <p className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1">
+                      <p className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1 dark:text-slate-400">
                         <span className="material-symbols-outlined text-[14px]">location_on</span> {ticket.location}
                       </p>
-                      <h3 className="text-sm font-bold text-slate-900 leading-tight">{ticket.title}</h3>
+                      <h3 className="text-sm font-bold text-slate-900 leading-tight dark:text-white">{ticket.title}</h3>
                     </div>
 
                     <div className="flex-1 flex sm:justify-center mb-3 sm:mb-0">
-                      <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider ${ticket.priority === 'High' ? 'bg-red-100 text-red-700' :
-                        ticket.priority === 'Medium' ? 'bg-orange-100 text-orange-700' :
-                          'bg-slate-100 text-slate-600'
+                      <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider ${ticket.priority === 'High' ? 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400' :
+                        ticket.priority === 'Medium' ? 'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400' :
+                          'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400'
                         }`}>
                         {ticket.priority}
                       </span>
                     </div>
 
                     <div className="flex-1 flex flex-col sm:items-end text-left sm:text-right">
-                      <span className="text-sm font-bold text-slate-900">{ticket.reported_by}</span>
-                      <span className="text-[11px] font-medium text-slate-500 mt-0.5">
+                      <span className="text-sm font-bold text-slate-900 dark:text-white">{ticket.reported_by}</span>
+                      <span className="text-[11px] font-medium text-slate-500 mt-0.5 dark:text-slate-400">
                         {new Date(ticket.reported_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
@@ -303,7 +321,7 @@ export default function Dashboard() {
               </div>
 
               {tickets.length === 0 && (
-                <div className="p-12 text-center text-slate-500">
+                <div className="p-12 text-center text-slate-500 dark:text-slate-400">
                   <ClipboardList className="mx-auto mb-3 opacity-20" size={48} />
                   <p className="font-bold">No tickets found</p>
                   <p className="text-xs">Try adjusting your filters or search terms.</p>
@@ -311,7 +329,7 @@ export default function Dashboard() {
               )}
             </div>
           ) : (
-            <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-sm h-[500px]">
+            <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-sm h-[500px] dark:border-slate-700">
               <MapContainer center={[7.2546, 80.5912]} zoom={15} scrollWheelZoom={true} style={{ height: '100%', width: '100%' }}>
                 <TileLayer
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -339,11 +357,11 @@ export default function Dashboard() {
 
           {pagination && tickets.length > 0 && viewMode === 'list' && (
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 px-2">
-              <span className="text-xs font-bold text-slate-500">Showing {tickets.length} of {pagination.total} tickets</span>
-              <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
-                <button className="px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-900 disabled:opacity-50" disabled><ChevronLeft size={16} /></button>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Showing {tickets.length} of {pagination.total} tickets</span>
+              <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 shadow-sm dark:bg-slate-800 dark:border-slate-700">
+                <button className="px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-900 disabled:opacity-50 dark:text-slate-400 dark:hover:text-white" disabled><ChevronLeft size={16} /></button>
                 <button className="w-8 h-8 rounded-md bg-primary text-white text-sm font-bold flex items-center justify-center">1</button>
-                <button className="px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-900 disabled:opacity-50" disabled><ChevronRight size={16} /></button>
+                <button className="px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-900 disabled:opacity-50 dark:text-slate-400 dark:hover:text-white" disabled><ChevronRight size={16} /></button>
               </div>
             </div>
           )}
@@ -351,33 +369,35 @@ export default function Dashboard() {
 
         {stats && (
           <section className="mb-8">
-            <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-              <RefreshCcw size={18} /> Resolution Rate
+            <h2 className="text-lg font-bold mb-4 flex items-center gap-2 dark:text-white">
+              <RefreshCcw size={18} /> Resolution Analytics
             </h2>
-            <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-              <div className="space-y-5">
-                {stats.resolutionRates.map((rate, idx) => {
-                  const colors = ['bg-blue-500', 'bg-green-500', 'bg-orange-500'];
-                  return (
-                    <div key={idx}>
-                      <div className="flex justify-between items-center mb-1.5">
-                        <span className="text-sm font-bold text-slate-700">{rate.category}</span>
-                        <span className="text-sm font-bold text-slate-900">{rate.rate}%</span>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {stats.resolutionRates.map((rate, idx) => {
+                const colors = ['#3b82f6', '#10b981', '#f59e0b'];
+                return (
+                  <div key={idx} className="bg-white rounded-xl border border-slate-100 shadow-sm p-6 dark:bg-slate-800 dark:border-slate-700 hover:border-primary/50 transition-colors group">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 dark:text-slate-400">{rate.category}</h4>
+                        <p className="text-2xl font-bold dark:text-white">{rate.rate}%</p>
                       </div>
-                      <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                        <div className={`h-full ${colors[idx]} rounded-full transition-all duration-1000`} style={{ width: `${rate.rate}%` }}></div>
+                      <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900 text-slate-400 group-hover:text-primary transition-colors">
+                        <TrendingUp size={16} />
                       </div>
                     </div>
-                  )
-                })}
-              </div>
-              <button
-                className="w-full mt-6 py-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 transition-colors"
-                onClick={() => setShowReports(true)}
-              >
-                View Detailed Reports
-              </button>
+                    <MiniChart data={rate.history} color={colors[idx]} />
+                    <p className="text-[10px] font-bold text-slate-400 mt-3 uppercase tracking-tighter">7 Day Trend</p>
+                  </div>
+                )
+              })}
             </div>
+            <button
+              className="w-full mt-6 py-3 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 transition-colors dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700"
+              onClick={() => setShowReports(true)}
+            >
+              View Detailed Efficiency Report
+            </button>
           </section>
         )}
 
@@ -388,10 +408,10 @@ export default function Dashboard() {
 
       {showReports && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 text-slate-900">
+          <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 dark:bg-slate-800">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 text-slate-900 dark:bg-slate-900 dark:border-slate-700 dark:text-white">
               <h2 className="text-xl font-bold">Maintenance Resolution Analysis</h2>
-              <button onClick={() => setShowReports(false)} className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-200 transition-all">
+              <button onClick={() => setShowReports(false)} className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-200 transition-all dark:hover:bg-slate-700">
                 <X size={24} />
               </button>
             </div>
@@ -408,17 +428,17 @@ export default function Dashboard() {
               </div>
 
               <div className="grid grid-cols-2 gap-6">
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
-                  <h4 className="text-xs font-bold text-slate-500 uppercase mb-1">Average Resolution</h4>
-                  <p className="text-2xl font-bold text-slate-900">3.2 Days</p>
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 dark:bg-slate-900 dark:border-slate-700">
+                  <h4 className="text-xs font-bold text-slate-500 uppercase mb-1 dark:text-slate-400">Average Resolution</h4>
+                  <p className="text-2xl font-bold text-slate-900 dark:text-white">3.2 Days</p>
                   <p className="text-[10px] text-green-600 font-bold mt-1 flex items-center gap-1">
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
                     -12% from last month
                   </p>
                 </div>
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
-                  <h4 className="text-xs font-bold text-slate-500 uppercase mb-1">Success Rate</h4>
-                  <p className="text-2xl font-bold text-slate-900">94.8%</p>
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 dark:bg-slate-900 dark:border-slate-700">
+                  <h4 className="text-xs font-bold text-slate-500 uppercase mb-1 dark:text-slate-400">Success Rate</h4>
+                  <p className="text-2xl font-bold text-slate-900 dark:text-white">94.8%</p>
                   <p className="text-[10px] text-green-600 font-bold mt-1 flex items-center gap-1">
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
                     +2.4% from last month
@@ -426,8 +446,8 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-            <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-end">
-              <button onClick={() => setShowReports(false)} className="px-6 py-2 bg-slate-900 text-white rounded-xl font-bold text-sm shadow-lg shadow-slate-900/20 hover:bg-slate-800 transition-colors">Close Analysis</button>
+            <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-end dark:bg-slate-900 dark:border-slate-700">
+              <button onClick={() => setShowReports(false)} className="px-6 py-2 bg-slate-900 text-white rounded-xl font-bold text-sm shadow-lg shadow-slate-900/20 hover:bg-slate-800 transition-colors dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white">Close Analysis</button>
             </div>
           </div>
         </div>

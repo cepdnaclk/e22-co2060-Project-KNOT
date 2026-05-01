@@ -23,7 +23,12 @@ const mockTickets = [
     reported_by: 'Prof. Sarah Jenkins',
     reported_at: '2023-10-24 09:15:00',
     maintenance_notes: 'Technician arrived at site. Confirmed the primary lamp module has reached end of life.',
-    category: 'Electrical Issues'
+    category: 'Electrical Issues',
+    assigned_to: 'Alex Technician',
+    history: [
+      { status: 'Open', timestamp: '2023-10-24 09:15:00', note: 'Ticket created' },
+      { status: 'In Progress', timestamp: '2023-10-24 10:30:00', note: 'Assigned to Alex' }
+    ]
   },
   {
     id: 2,
@@ -38,7 +43,9 @@ const mockTickets = [
     reported_by: 'John Doe',
     reported_at: '2023-10-24 10:30:00',
     maintenance_notes: '',
-    category: 'Furniture Repairs'
+    category: 'Furniture Repairs',
+    assigned_to: null,
+    history: [{ status: 'Open', timestamp: '2023-10-24 10:30:00', note: 'Ticket created' }]
   },
   {
     id: 3,
@@ -53,7 +60,9 @@ const mockTickets = [
     reported_by: 'Maintenance Bot',
     reported_at: '2023-10-24 07:00:00',
     maintenance_notes: '',
-    category: 'Electrical Issues'
+    category: 'Electrical Issues',
+    assigned_to: null,
+    history: [{ status: 'Open', timestamp: '2023-10-24 07:00:00', note: 'Detected by sensor' }]
   },
   {
     id: 4,
@@ -68,7 +77,9 @@ const mockTickets = [
     reported_by: 'Facility Manager',
     reported_at: '2023-10-24 11:45:00',
     maintenance_notes: '',
-    category: 'HVAC Maintenance'
+    category: 'HVAC Maintenance',
+    assigned_to: null,
+    history: [{ status: 'Open', timestamp: '2023-10-24 11:45:00', note: 'Ticket created' }]
   },
   {
     id: 5,
@@ -83,7 +94,12 @@ const mockTickets = [
     reported_by: 'IT Operations',
     reported_at: '2023-10-25 08:30:00',
     maintenance_notes: 'Inspected fans. Possible bearing failure.',
-    category: 'HVAC Maintenance'
+    category: 'HVAC Maintenance',
+    assigned_to: 'Sarah Engineer',
+    history: [
+      { status: 'Open', timestamp: '2023-10-25 08:30:00', note: 'Ticket created' },
+      { status: 'In Progress', timestamp: '2023-10-25 09:00:00', note: 'Sarah assigned' }
+    ]
   },
   {
     id: 6,
@@ -98,8 +114,18 @@ const mockTickets = [
     reported_by: 'Security Team',
     reported_at: '2023-10-25 14:20:00',
     maintenance_notes: '',
-    category: 'Security Systems'
+    category: 'Security Systems',
+    assigned_to: null,
+    history: [{ status: 'Open', timestamp: '2023-10-25 14:20:00', note: 'Ticket created' }]
   }
+];
+
+const mockEquipment = [
+  { id: 1, name: 'Digital Multimeter', category: 'Electrical', status: 'Available', last_used: '2023-10-23' },
+  { id: 2, name: 'Refrigerant Leak Detector', category: 'HVAC', status: 'In Use', last_used: '2023-10-24' },
+  { id: 3, name: 'Heavy Duty Drill', category: 'General', status: 'Maintenance', last_used: '2023-10-20' },
+  { id: 4, name: 'Network Cable Tester', category: 'IT', status: 'Available', last_used: '2023-10-25' },
+  { id: 5, name: 'Thermal Imaging Camera', category: 'Inspection', status: 'Available', last_used: '2023-10-22' }
 ];
 
 // Initialize missing columns in faults table if they don't exist
@@ -107,8 +133,10 @@ async function initDB() {
   try {
     await pool.query('ALTER TABLE faults ADD COLUMN maintenance_notes TEXT');
     await pool.query('ALTER TABLE faults ADD COLUMN photo_url VARCHAR(255)');
+    await pool.query('ALTER TABLE faults ADD COLUMN assigned_to VARCHAR(100)');
+    await pool.query('ALTER TABLE faults ADD COLUMN history JSON');
   } catch (err) {
-    // Ignore error, we will use mocks if needed
+    // Ignore error
   }
 }
 initDB();
@@ -120,16 +148,20 @@ const formatTicket = (fault) => ({
   title: fault.title,
   description: fault.description,
   location: fault.location,
+  lat: fault.lat,
+  lng: fault.lng,
   priority: fault.priority,
   status: fault.status === 'In Progress' ? 'In Progress' : fault.status === 'Resolved' ? 'Resolved' : 'Open',
   reported_by: fault.reporter_name || 'Unknown',
   reported_at: fault.created_at,
   maintenance_notes: fault.maintenance_notes || '',
-  category: 'General',
-  photo_url: fault.photo_url || null
+  category: fault.category || 'General',
+  photo_url: fault.photo_url || null,
+  assigned_to: fault.assigned_to || null,
+  history: fault.history ? JSON.parse(fault.history) : []
 });
 
-// Login an administrator
+// Login
 app.post('/api/auth/login', (req, res) => {
   const { username, password } = req.body;
   if (username === 'admin' && password === 'adminpass') {
@@ -210,8 +242,6 @@ app.get('/api/tickets', async (req, res) => {
 app.get('/api/tickets/stats', async (req, res) => {
   try {
     const [rows] = await pool.query(`SELECT status FROM faults`);
-
-    // Map existing statuses to Open/In Progress/Resolved
     const mappedStatuses = rows.map(r => r.status === 'In Progress' ? 'In Progress' : r.status === 'Resolved' ? 'Resolved' : 'Open');
 
     const open = mappedStatuses.filter(s => s === 'Open').length;
@@ -223,24 +253,27 @@ app.get('/api/tickets/stats', async (req, res) => {
       inProgress,
       resolvedToday,
       resolutionRates: [
-        { category: 'Electrical Issues', rate: 85 },
-        { category: 'Furniture Repairs', rate: 60 },
-        { category: 'HVAC Maintenance', rate: 45 }
+        { category: 'Electrical', rate: 85, history: [40, 55, 60, 85, 75, 85, 85] },
+        { category: 'Furniture', rate: 60, history: [20, 30, 45, 50, 55, 60, 60] },
+        { category: 'HVAC', rate: 45, history: [30, 35, 40, 45, 40, 45, 45] }
       ]
     });
   } catch (error) {
-    console.warn('DB error, using mock data for /api/tickets/stats');
     res.json({
       open: 3,
-      inProgress: 1,
+      inProgress: 2,
       resolvedToday: 5,
       resolutionRates: [
-        { category: 'Electrical Issues', rate: 85 },
-        { category: 'Furniture Repairs', rate: 60 },
-        { category: 'HVAC Maintenance', rate: 45 }
+        { category: 'Electrical', rate: 85, history: [40, 55, 60, 85, 75, 85, 85] },
+        { category: 'Furniture', rate: 60, history: [20, 30, 45, 50, 55, 60, 60] },
+        { category: 'HVAC', rate: 45, history: [30, 35, 40, 45, 40, 45, 45] }
       ]
     });
   }
+});
+
+app.get('/api/equipment', (req, res) => {
+  res.json(mockEquipment);
 });
 
 app.get('/api/tickets/:id', async (req, res) => {
@@ -261,7 +294,6 @@ app.get('/api/tickets/:id', async (req, res) => {
 
     res.json(formatTicket(rows[0]));
   } catch (error) {
-    console.warn('DB error, using mock data for /api/tickets/:id');
     const ticket = mockTickets.find(t => t.id == req.params.id || t.ticket_number == req.params.id);
     if (ticket) res.json(ticket);
     else res.status(404).json({ error: 'Ticket not found' });
@@ -275,7 +307,7 @@ app.put('/api/tickets/:id', async (req, res) => {
       id = parseInt(id.replace('KNT-', ''), 10) - 1000;
     }
 
-    const { status, maintenance_notes, photo_url } = req.body;
+    const { status, maintenance_notes, photo_url, assigned_to } = req.body;
     let updateQuery = 'UPDATE faults SET ';
     const params = [];
 
@@ -294,6 +326,10 @@ app.put('/api/tickets/:id', async (req, res) => {
       updateQuery += 'photo_url = ?, ';
       params.push(photo_url);
     }
+    if (assigned_to !== undefined) {
+      updateQuery += 'assigned_to = ?, ';
+      params.push(assigned_to);
+    }
 
     updateQuery = updateQuery.slice(0, -2) + ' WHERE id = ?';
     params.push(id);
@@ -301,7 +337,6 @@ app.put('/api/tickets/:id', async (req, res) => {
     await pool.query(updateQuery, params);
     res.json({ success: true, message: 'Ticket updated successfully' });
   } catch (error) {
-    console.warn('DB error, mocking update response');
     res.json({ success: true, message: 'Ticket updated successfully (MOCK)' });
   }
 });
