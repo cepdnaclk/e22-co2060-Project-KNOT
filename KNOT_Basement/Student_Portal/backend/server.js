@@ -10,7 +10,11 @@ app.use(express.json());
 const pool = mysql.createPool({
   host: 'localhost',
   user: 'root',
+<<<<<<< HEAD
   password: '12345',
+=======
+  password: '',
+>>>>>>> main
   database: 'knot_db',
   waitForConnections: true,
   connectionLimit: 10,
@@ -301,6 +305,7 @@ app.get('/api/admin/pending-bookings', async (req, res) => {
   }
 });
 
+<<<<<<< HEAD
 app.get('/api/admin/all-bookings', async (req, res) => {
   try {
     const [rows] = await pool.query(`
@@ -321,6 +326,8 @@ app.get('/api/admin/all-bookings', async (req, res) => {
   }
 });
 
+=======
+>>>>>>> main
 app.put('/api/admin/bookings/:id', async (req, res) => {
   const { id } = req.params;
   const { action } = req.body; 

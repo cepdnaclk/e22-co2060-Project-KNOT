@@ -1,8 +1,12 @@
+<<<<<<< HEAD
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 
 // Pages
+=======
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+>>>>>>> main
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import ReportFault from './pages/ReportFault';
@@ -10,6 +14,7 @@ import BookSpace from './pages/BookSpace';
 import Profile from './pages/Profile';
 import MaintenanceDashboard from './pages/admin/MaintenanceDashboard';
 import TicketDetails from './pages/admin/TicketDetails';
+<<<<<<< HEAD
 import LecturerDashboard from './pages/LecturerDashboard';
 
 // Booking Admin — layout + nested sub-pages
@@ -22,11 +27,16 @@ import BARoomManagement from './pages/admin/BARoomManagement';
 // Components
 import Navigation from './components/Navigation';
 import PageTransition from './components/PageTransition';
+=======
+import BookingDashboard from './pages/admin/BookingDashboard';
+import LecturerDashboard from './pages/LecturerDashboard';
+>>>>>>> main
 
 const ProtectedRoute = ({ children }) => {
   return localStorage.getItem('knot_user') ? children : <Navigate to="/login" />;
 };
 
+<<<<<<< HEAD
 // Pages that manage their own full-screen sidebar layout
 const SELF_LAYOUT_PAGES = ['/booking-admin', '/admin', '/lecturer'];
 
@@ -79,6 +89,24 @@ export default function App() {
   return (
     <BrowserRouter>
       <AnimatedRoutes />
+=======
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/report-fault" element={<ProtectedRoute><ReportFault /></ProtectedRoute>} />
+        <Route path="/book-space" element={<ProtectedRoute><BookSpace /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        
+        {/* Unified Admin Routes */}
+        <Route path="/admin" element={<ProtectedRoute><MaintenanceDashboard /></ProtectedRoute>} />
+        <Route path="/admin/ticket/:id" element={<ProtectedRoute><TicketDetails /></ProtectedRoute>} />
+        <Route path="/booking-admin" element={<ProtectedRoute><BookingDashboard /></ProtectedRoute>} />
+        <Route path="/lecturer" element={<ProtectedRoute><LecturerDashboard /></ProtectedRoute>} />
+      </Routes>
+>>>>>>> main
     </BrowserRouter>
   );
 }

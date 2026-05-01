@@ -19,6 +19,7 @@ select:focus {
   border-color: #2d7dd2;
   box-shadow: 0 0 0 1px #2d7dd2;
 }
+<<<<<<< HEAD
 
 /* Custom Scrollbar for sleek UI */
 .custom-scrollbar::-webkit-scrollbar {
@@ -38,3 +39,5 @@ select:focus {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: rgba(148, 163, 184, 0.5);
 }
+=======
+>>>>>>> main

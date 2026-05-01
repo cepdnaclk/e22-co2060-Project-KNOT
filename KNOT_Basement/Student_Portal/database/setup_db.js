@@ -4,7 +4,11 @@ const mysql = require('mysql2/promise');
 const dbConfig = {
   host: 'localhost',
   user: 'root',
+<<<<<<< HEAD
   password: '12345' // MySQL root password
+=======
+  password: '' // Default password is empty, change if needed
+>>>>>>> main
 };
 
 async function setupDatabase() {
@@ -31,6 +35,10 @@ async function setupDatabase() {
       );
     `);
 
+<<<<<<< HEAD
+=======
+    
+>>>>>>> main
     // Create Faults Table
     console.log("Creating Faults table...");
     await connection.query(`
