@@ -10,7 +10,7 @@ app.use(express.json());
 const pool = mysql.createPool({
   host: 'localhost',
   user: 'root',
-  password: '',
+  password: 'new_password',
   database: 'knot_db',
   waitForConnections: true,
   connectionLimit: 10,
@@ -21,6 +21,7 @@ async function initDB() {
   try { await pool.query('ALTER TABLE bookings ADD COLUMN end_time DATETIME'); } catch(e){}
   try { await pool.query('ALTER TABLE bookings ADD COLUMN assigned_lecturer VARCHAR(255)'); } catch(e){}
   try { await pool.query('ALTER TABLE bookings ADD COLUMN purpose TEXT'); } catch(e){}
+  try { await pool.query('ALTER TABLE bookings ADD COLUMN rejection_reason TEXT'); } catch(e){}
   try { await pool.query('ALTER TABLE faults ADD COLUMN maintenance_notes TEXT'); } catch(e){}
   try { await pool.query('ALTER TABLE faults ADD COLUMN photo_url VARCHAR(255)'); } catch(e){}
 }
@@ -111,7 +112,7 @@ app.get('/api/lecturer/requests/:id', async (req, res) => {
     const lecturerName = userRows[0].name;
 
     const [rows] = await pool.query(
-      'SELECT b.*, u.name as requestor_name FROM bookings b JOIN users u ON b.user_id = u.id WHERE b.assigned_lecturer = ? AND b.status = "Pending" ORDER BY b.id DESC',
+      'SELECT b.*, u.name as requestor_name FROM bookings b JOIN users u ON b.user_id = u.id WHERE b.assigned_lecturer = ? ORDER BY b.id DESC',
       [lecturerName]
     );
     res.json(rows);
@@ -132,8 +133,9 @@ app.put('/api/lecturer/requests/:id/forward', async (req, res) => {
 
 app.put('/api/lecturer/requests/:id/reject', async (req, res) => {
   const { id } = req.params;
+  const { reason } = req.body;
   try {
-    await pool.query('UPDATE bookings SET status = "Rejected" WHERE id = ?', [id]);
+    await pool.query('UPDATE bookings SET status = "Rejected", rejection_reason = ? WHERE id = ?', [reason || null, id]);
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -289,6 +291,7 @@ app.get('/api/admin/pending-bookings', async (req, res) => {
             b.title as room_name, 
             b.time_display as booking_date, 
             b.status,
+            b.assigned_lecturer,
             u.name AS user_name, 
             u.role
         FROM bookings b
@@ -303,18 +306,37 @@ app.get('/api/admin/pending-bookings', async (req, res) => {
 
 app.put('/api/admin/bookings/:id', async (req, res) => {
   const { id } = req.params;
-  const { action } = req.body; 
+  const { action, reason } = req.body; 
 
   if (!['approve', 'reject'].includes(action)) {
       return res.status(400).json({ error: 'Invalid action. Must be approve or reject.' });
   }
 
+  if (action === 'approve') {
+      try {
+          const [booking] = await pool.query('SELECT title, time_display FROM bookings WHERE id = ?', [id]);
+          if (booking.length > 0) {
+              const { title, time_display } = booking[0];
+              const [overlapping] = await pool.query(
+                  'SELECT id FROM bookings WHERE title = ? AND time_display = ? AND status = "Approved" AND id != ?', 
+                  [title, time_display, id]
+              );
+              if (overlapping.length > 0) {
+                  return res.status(409).json({ error: 'Cannot approve: Room is already booked for this time.' });
+              }
+          }
+      } catch (err) {
+          return res.status(500).json({ error: err.message });
+      }
+  }
+
   const newStatus = action === 'approve' ? 'Approved' : 'Rejected';
+  const rejectionReason = action === 'reject' ? (reason || null) : null;
 
   try {
       const [result] = await pool.query(
-          'UPDATE bookings SET status = ? WHERE id = ?',
-          [newStatus, id]
+          'UPDATE bookings SET status = ?, rejection_reason = ? WHERE id = ?',
+          [newStatus, rejectionReason, id]
       );
       if (result.affectedRows === 0) {
           return res.status(404).json({ error: 'Booking not found' });
@@ -322,6 +344,70 @@ app.put('/api/admin/bookings/:id', async (req, res) => {
       res.json({ message: `Booking successfully ${newStatus}` });
   } catch (err) {
       res.status(500).json({ error: err.message });
+  }
+});
+app.get('/api/admin/all-bookings', async (req, res) => {
+  try {
+    const [bookings] = await pool.query(`
+        SELECT 
+            b.id, 
+            b.title as room_name, 
+            b.time_display as booking_date, 
+            b.status,
+            b.rejection_reason,
+            b.assigned_lecturer,
+            u.name AS user_name, 
+            u.role
+        FROM bookings b
+        JOIN users u ON b.user_id = u.id
+        ORDER BY b.id DESC
+    `);
+    res.json(bookings);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/admin/rooms', async (req, res) => {
+  try {
+    const [rooms] = await pool.query('SELECT * FROM rooms');
+    res.json(rooms);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/admin/rooms', async (req, res) => {
+  const { name, capacity, type, status } = req.body;
+  try {
+    const [result] = await pool.query(
+      'INSERT INTO rooms (name, capacity, type, status) VALUES (?, ?, ?, ?)',
+      [name, capacity || 30, type || 'Lecture Hall', status || 'Available']
+    );
+    res.json({ success: true, id: result.insertId });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/admin/rooms/:id', async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  try {
+    await pool.query('UPDATE rooms SET status = ? WHERE id = ?', [status, id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/admin/rooms/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query('DELETE FROM rooms WHERE id = ?', [id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

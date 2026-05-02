@@ -4,7 +4,7 @@ const mysql = require('mysql2/promise');
 const dbConfig = {
   host: 'localhost',
   user: 'root',
-  password: '' // Default password is empty, change if needed
+  password: 'new_password' // Default password is empty, change if needed
 };
 
 async function setupDatabase() {
@@ -67,6 +67,18 @@ async function setupDatabase() {
       );
     `);
 
+    // Create Rooms Table
+    console.log("Creating Rooms table...");
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS rooms (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        capacity INT DEFAULT 30,
+        type VARCHAR(50) DEFAULT 'Lecture Hall',
+        status VARCHAR(50) DEFAULT 'Available'
+      );
+    `);
+
     // Seeding mock user
     console.log("Seeding Mock Data...");
     const [rows] = await connection.query(`SELECT * FROM users WHERE username = 'e22237'`);
@@ -91,6 +103,18 @@ async function setupDatabase() {
         ('EOE - Main Lab', 'Tomorrow, 10:00 AM', 'Approved', 'science', ?, NULL, 'General Study'),
         ('DO1 - Seminar Hall', 'Friday, 02:30 PM', 'Pending', 'corporate_fare', ?, 'Dr. Smith', 'Group Discussion')
       `, [userId, userId]);
+    }
+
+    // Seed mock rooms
+    const [roomRows] = await connection.query(`SELECT * FROM rooms`);
+    if (roomRows.length === 0) {
+      await connection.query(`
+        INSERT INTO rooms (name, capacity, type, status) VALUES 
+        ('EOE - Main Lab', 40, 'Lab', 'Available'),
+        ('DO1 - Seminar Hall', 100, 'Seminar Hall', 'Available'),
+        ('DO2 - Lecture Hall', 60, 'Lecture Hall', 'Available'),
+        ('DO3 - Lecture Hall', 60, 'Lecture Hall', 'Maintenance')
+      `);
     }
 
     const [adminRows] = await connection.query(`SELECT * FROM users WHERE username = 'admin'`);

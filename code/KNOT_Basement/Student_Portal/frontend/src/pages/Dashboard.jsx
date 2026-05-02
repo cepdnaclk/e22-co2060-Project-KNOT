@@ -102,8 +102,15 @@ export default function Dashboard() {
                                 <p className="text-[12px] text-slate-500 mt-0.5">{b.time_display}</p>
                             </div>
                          </div>
-                         <div className={`px-3 py-1 rounded-full text-xs font-bold ${b.status === 'Approved' ? 'bg-secondary/10 text-secondary' : 'bg-[#fff5e1] text-[#e09121]'}`}>
-                             {b.status}
+                         <div className="flex flex-col items-end gap-1">
+                             <div className={`px-3 py-1 rounded-full text-xs font-bold ${b.status === 'Approved' ? 'bg-secondary/10 text-secondary' : b.status === 'Rejected' ? 'bg-red-100 text-red-600' : 'bg-[#fff5e1] text-[#e09121]'}`}>
+                                 {b.status}
+                             </div>
+                             {b.status === 'Rejected' && b.rejection_reason && (
+                               <p className="text-[10px] text-red-500 italic max-w-[150px] text-right truncate" title={b.rejection_reason}>
+                                 Reason: {b.rejection_reason}
+                               </p>
+                             )}
                          </div>
                     </div>
                 ))

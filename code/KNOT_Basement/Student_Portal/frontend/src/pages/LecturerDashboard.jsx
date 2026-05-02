@@ -10,6 +10,8 @@ export default function LecturerDashboard() {
   const [showAllBookings, setShowAllBookings] = useState(false);
   const [showAllFaults, setShowAllFaults] = useState(false);
   const [showAllRequests, setShowAllRequests] = useState(false);
+  const [rejectingId, setRejectingId] = useState(null);
+  const [rejectReason, setRejectReason] = useState('');
   const navigate = useNavigate();
   
   const userString = localStorage.getItem('knot_user');
@@ -54,7 +56,9 @@ export default function LecturerDashboard() {
 
   const rejectRequest = async (id) => {
     try {
-      await axios.put('http://localhost:5001/api/lecturer/requests/' + id + '/reject');
+      await axios.put('http://localhost:5001/api/lecturer/requests/' + id + '/reject', { reason: rejectReason });
+      setRejectingId(null);
+      setRejectReason('');
       fetchData(); 
     } catch (err) {
       alert("Failed to reject request.");
@@ -136,11 +140,36 @@ export default function LecturerDashboard() {
                                 </p>
                             </div>
                          </div>
-                         <div className="flex items-center gap-2 mt-2 sm:mt-0">
-                            <button onClick={() => rejectRequest(req.id)} className="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-[11px] font-bold hover:bg-red-100 transition-colors">Reject</button>
-                            <button onClick={() => forwardToAR(req.id)} className="px-3 py-1.5 bg-primary text-white rounded-lg text-[11px] font-bold hover:bg-primary/90 transition-colors flex items-center gap-1">
-                               <span className="material-symbols-outlined text-[14px] font-variation-fill">verified</span> Approve & Forward
-                            </button>
+                         <div className="flex flex-col items-end gap-2 mt-2 sm:mt-0">
+                            {req.status === 'Pending' ? (
+                                rejectingId === req.id ? (
+                                    <div className="flex flex-col gap-2 w-full sm:w-48 shrink-0">
+                                        <input type="text" value={rejectReason} onChange={e => setRejectReason(e.target.value)} placeholder="Reason for rejection..." className="w-full px-2 py-1 text-xs bg-slate-50 border border-slate-200 rounded outline-none focus:ring-1 focus:ring-red-500/50" autoFocus />
+                                        <div className="flex gap-2">
+                                            <button onClick={() => rejectRequest(req.id)} className="flex-1 py-1 px-2 rounded bg-red-600 text-white font-bold hover:bg-red-700 transition-colors text-[10px]">Confirm</button>
+                                            <button onClick={() => { setRejectingId(null); setRejectReason(''); }} className="flex-1 py-1 px-2 rounded bg-slate-200 text-slate-700 font-bold hover:bg-slate-300 transition-colors text-[10px]">Cancel</button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-2">
+                                        <button onClick={() => { setRejectingId(req.id); setRejectReason(''); }} className="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-[11px] font-bold hover:bg-red-100 transition-colors">Reject</button>
+                                        <button onClick={() => forwardToAR(req.id)} className="px-3 py-1.5 bg-primary text-white rounded-lg text-[11px] font-bold hover:bg-primary/90 transition-colors flex items-center gap-1">
+                                            <span className="material-symbols-outlined text-[14px] font-variation-fill">verified</span> Approve & Forward
+                                        </button>
+                                    </div>
+                                )
+                            ) : (
+                                 <div className="flex flex-col items-end gap-1">
+                                     <div className={`px-3 py-1 rounded-full text-xs font-bold ${req.status === 'Approved' ? 'bg-secondary/10 text-secondary' : req.status === 'Rejected' ? 'bg-red-100 text-red-600' : 'bg-[#fff5e1] text-[#e09121]'}`}>
+                                         {req.status}
+                                     </div>
+                                     {req.status === 'Rejected' && req.rejection_reason && (
+                                         <p className="text-[10px] text-red-500 italic max-w-[150px] text-right truncate" title={req.rejection_reason}>
+                                             Reason: {req.rejection_reason}
+                                         </p>
+                                     )}
+                                 </div>
+                            )}
                          </div>
                     </div>
                 ))
@@ -173,8 +202,15 @@ export default function LecturerDashboard() {
                                 <p className="text-[12px] text-slate-500 mt-0.5">{b.time_display}</p>
                             </div>
                          </div>
-                         <div className={`px-3 py-1 rounded-full text-xs font-bold ${b.status === 'Approved' ? 'bg-secondary/10 text-secondary' : 'bg-[#fff5e1] text-[#e09121]'}`}>
-                             {b.status}
+                         <div className="flex flex-col items-end gap-1">
+                             <div className={`px-3 py-1 rounded-full text-xs font-bold ${b.status === 'Approved' ? 'bg-secondary/10 text-secondary' : b.status === 'Rejected' ? 'bg-red-100 text-red-600' : 'bg-[#fff5e1] text-[#e09121]'}`}>
+                                 {b.status}
+                             </div>
+                             {b.status === 'Rejected' && b.rejection_reason && (
+                               <p className="text-[10px] text-red-500 italic max-w-[150px] text-right truncate" title={b.rejection_reason}>
+                                 Reason: {b.rejection_reason}
+                               </p>
+                             )}
                          </div>
                     </div>
                 ))
