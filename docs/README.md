@@ -48,7 +48,18 @@ A HTML template integrated with the given GitHub repository templates, based on 
 
 ## Introduction
 
-Description of the real world problem and solution, impact
+####The Problem
+Universities and large educational institutions often suffer from highly fragmented administrative systems. Currently, the processes for booking academic resources (such as lecture halls, labs, and seminar rooms) and reporting infrastructure faults are disconnected. This leads to severe coordination issues between students, academic staff (lecturers), administrative registries (AR), and maintenance technicians. The real-world consequences include double-booked lecture halls, untracked maintenance requests that take weeks to resolve, and a general lack of transparency regarding the status of requests.
+
+####The Solution
+Project KNOT is a unified, centralized resource and maintenance management platform. It solves this fragmentation by offering a single, Role-Based Access Control (RBAC) ecosystem.
+
+-  For Bookings: It introduces a multi-tier endorsement workflow where students can request rooms, lecturers can endorse them, and Booking Admins can finalize the schedule—all backed by an automated conflict-prevention engine.
+-  For Maintenance: It provides a streamlined ticketing system where users can report faults and technicians can provide live updates and resolution notes.
+Impact
+KNOT significantly reduces administrative overhead and eliminates scheduling conflicts. By providing a transparent, real-time tracking system, it improves communication between departments, accelerates maintenance response times, and ensures university assets are utilized optimally.
+
+
 
 
 ## Solution Architecture
