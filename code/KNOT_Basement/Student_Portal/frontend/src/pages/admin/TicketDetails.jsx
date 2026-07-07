@@ -21,10 +21,23 @@ export default function TicketDetails() {
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState('');
   const [notes, setNotes] = useState('');
+  const [technicians, setTechnicians] = useState([]);
+  const [assignedTechId, setAssignedTechId] = useState('');
 
   useEffect(() => {
     fetchTicket();
+    fetchTechnicians();
   }, [id]);
+
+  const fetchTechnicians = async () => {
+    try {
+      const res = await fetch('http://localhost:5001/api/admin/technicians');
+      const data = await res.json();
+      setTechnicians(data);
+    } catch (err) {
+      console.error("Error fetching technicians:", err);
+    }
+  };
 
   const fetchTicket = async () => {
     try {
@@ -33,6 +46,7 @@ export default function TicketDetails() {
       setTicket(data);
       setStatus(data.status);
       setNotes(data.maintenance_notes || '');
+      setAssignedTechId(data.assigned_technician_id || '');
     } catch (err) {
       console.error(err);
     } finally {
@@ -46,7 +60,11 @@ export default function TicketDetails() {
       const res = await fetch(`http://localhost:5001/api/tickets/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status, maintenance_notes: notes })
+        body: JSON.stringify({ 
+          status, 
+          maintenance_notes: notes,
+          assigned_technician_id: assignedTechId === '' ? null : Number(assignedTechId)
+        })
       });
       if (res.ok) {
         navigate('/admin');
@@ -190,6 +208,23 @@ export default function TicketDetails() {
               </button>
             ))}
           </div>
+        </section>
+
+        <section className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 p-6 mb-6">
+          <h2 className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
+            <Users size={16} className="text-slate-400" />
+            Assign Technician
+          </h2>
+          <select
+            value={assignedTechId}
+            onChange={(e) => setAssignedTechId(e.target.value)}
+            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-sm text-slate-750 dark:text-slate-200 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all font-medium"
+          >
+            <option value="">Unassigned</option>
+            {technicians.map(t => (
+              <option key={t.id} value={t.id}>{t.name} ({t.department})</option>
+            ))}
+          </select>
         </section>
 
         <section className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 p-6 mb-6">

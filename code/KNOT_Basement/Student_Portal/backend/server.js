@@ -24,6 +24,7 @@ async function initDB() {
   try { await pool.query('ALTER TABLE bookings ADD COLUMN rejection_reason TEXT'); } catch(e){}
   try { await pool.query('ALTER TABLE faults ADD COLUMN maintenance_notes TEXT'); } catch(e){}
   try { await pool.query('ALTER TABLE faults ADD COLUMN photo_url VARCHAR(255)'); } catch(e){}
+  try { await pool.query('ALTER TABLE faults ADD COLUMN assigned_technician_id INT'); } catch(e){}
 }
 initDB();
 
@@ -154,7 +155,9 @@ const formatTicket = (fault) => ({
   reported_by: fault.reporter_name || 'System User',
   location: fault.location || 'N/A',
   maintenance_notes: fault.maintenance_notes || null,
-  photo_url: fault.photo_url || null
+  photo_url: fault.photo_url || null,
+  assigned_technician_id: fault.assigned_technician_id || null,
+  assigned_technician_name: fault.technician_name || null
 });
 
 app.get('/api/tickets', async (req, res) => {
@@ -162,9 +165,10 @@ app.get('/api/tickets', async (req, res) => {
     const { search, priority, status, page = 1, limit = 10 } = req.query;
     
     let query = `
-      SELECT f.*, u.name as reporter_name 
+      SELECT f.*, u.name as reporter_name, tech.name as technician_name
       FROM faults f 
       LEFT JOIN users u ON f.user_id = u.id 
+      LEFT JOIN users tech ON f.assigned_technician_id = tech.id
       WHERE 1=1
     `;
     const params = [];
@@ -227,9 +231,10 @@ app.get('/api/tickets/stats', async (req, res) => {
 app.get('/api/tickets/:id', async (req, res) => {
   try {
     const [rows] = await pool.query(`
-      SELECT f.*, u.name as reporter_name 
+      SELECT f.*, u.name as reporter_name, tech.name as technician_name
       FROM faults f 
       LEFT JOIN users u ON f.user_id = u.id 
+      LEFT JOIN users tech ON f.assigned_technician_id = tech.id
       WHERE f.id = ?
     `, [req.params.id]);
     
@@ -241,17 +246,19 @@ app.get('/api/tickets/:id', async (req, res) => {
 });
 
 app.put('/api/tickets/:id', async (req, res) => {
-  const { status, maintenance_notes, photo_url } = req.body;
+  const { status, maintenance_notes, photo_url, assigned_technician_id } = req.body;
   try {
     // Add columns if they missed initialization
     try { await pool.query('ALTER TABLE faults ADD COLUMN maintenance_notes TEXT'); } catch(e){}
     try { await pool.query('ALTER TABLE faults ADD COLUMN photo_url VARCHAR(255)'); } catch(e){}
+    try { await pool.query('ALTER TABLE faults ADD COLUMN assigned_technician_id INT'); } catch(e){}
 
     const updateFields = [];
     const params = [];
     if (status !== undefined) { updateFields.push('status = ?'); params.push(status); }
     if (maintenance_notes !== undefined) { updateFields.push('maintenance_notes = ?'); params.push(maintenance_notes); }
     if (photo_url !== undefined) { updateFields.push('photo_url = ?'); params.push(photo_url); }
+    if (assigned_technician_id !== undefined) { updateFields.push('assigned_technician_id = ?'); params.push(assigned_technician_id); }
     
     if (status === 'Resolved') {
       updateFields.push('resolved_at = CURRENT_TIMESTAMP');
@@ -262,6 +269,58 @@ app.put('/api/tickets/:id', async (req, res) => {
       await pool.query(`UPDATE faults SET ${updateFields.join(', ')} WHERE id = ?`, params);
     }
     
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Technician List (for admin assignment)
+app.get('/api/admin/technicians', async (req, res) => {
+  try {
+    const [rows] = await pool.query("SELECT id, name, username, department FROM users WHERE role = 'Technician'");
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Technician Tasks (get assigned faults)
+app.get('/api/technician/tickets/:userId', async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const [rows] = await pool.query(`
+      SELECT f.*, u.name as reporter_name, tech.name as technician_name
+      FROM faults f
+      LEFT JOIN users u ON f.user_id = u.id
+      LEFT JOIN users tech ON f.assigned_technician_id = tech.id
+      WHERE f.assigned_technician_id = ?
+      ORDER BY f.created_at DESC
+    `, [userId]);
+    res.json(rows.map(formatTicket));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Technician Task Update
+app.put('/api/technician/tickets/:id', async (req, res) => {
+  const { id } = req.params;
+  const { status, maintenance_notes } = req.body;
+  try {
+    const updateFields = [];
+    const params = [];
+    if (status !== undefined) { updateFields.push('status = ?'); params.push(status); }
+    if (maintenance_notes !== undefined) { updateFields.push('maintenance_notes = ?'); params.push(maintenance_notes); }
+    
+    if (status === 'Resolved') {
+      updateFields.push('resolved_at = CURRENT_TIMESTAMP');
+    }
+
+    if (updateFields.length > 0) {
+      params.push(id);
+      await pool.query(`UPDATE faults SET ${updateFields.join(', ')} WHERE id = ?`, params);
+    }
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -407,6 +466,124 @@ app.delete('/api/admin/rooms/:id', async (req, res) => {
     await pool.query('DELETE FROM rooms WHERE id = ?', [id]);
     res.json({ success: true });
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Bulk validate semester pre-bookings
+app.post('/api/admin/bookings/bulk-validate', async (req, res) => {
+  const { semesterStart, semesterEnd, rows } = req.body;
+  if (!semesterStart || !semesterEnd || !Array.isArray(rows)) {
+    return res.status(400).json({ error: 'Missing parameter(s). Required: semesterStart, semesterEnd, rows' });
+  }
+
+  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+  try {
+    const generatedBookings = [];
+
+    // Parse date strings in local time to avoid timezone shift
+    const [startYear, startMonth, startDay] = semesterStart.split('-').map(Number);
+    const [endYear, endMonth, endDay] = semesterEnd.split('-').map(Number);
+
+    for (const row of rows) {
+      const { roomName, dayOfWeek, startTime, endTime, purpose, lecturer } = row;
+      const targetDayIdx = daysOfWeek.indexOf(dayOfWeek);
+      if (targetDayIdx === -1) continue;
+      if (!roomName || !startTime || !endTime) continue;
+
+      let current = new Date(startYear, startMonth - 1, startDay);
+      const end = new Date(endYear, endMonth - 1, endDay);
+
+      while (current <= end) {
+        if (current.getDay() === targetDayIdx) {
+          const dateString = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`;
+
+          // Format start and end times
+          const sTime = typeof startTime === 'string' && startTime.includes(':') ? startTime : '08:30';
+          const eTime = typeof endTime === 'string' && endTime.includes(':') ? endTime : '10:30';
+
+          const [startH, startM] = sTime.split(':');
+          const [endH, endM] = eTime.split(':');
+
+          const startHourInt = parseInt(startH) || 0;
+          const startMinInt = parseInt(startM) || 0;
+          const endHourInt = parseInt(endH) || 0;
+          const endMinInt = parseInt(endM) || 0;
+
+          const startAmPm = startHourInt >= 12 ? 'PM' : 'AM';
+          const startDisp = `${String(startHourInt > 12 ? startHourInt - 12 : startHourInt === 0 ? 12 : startHourInt).padStart(2, '0')}:${String(startMinInt).padStart(2, '0')} ${startAmPm}`;
+
+          const endAmPm = endHourInt >= 12 ? 'PM' : 'AM';
+          const endDisp = `${String(endHourInt > 12 ? endHourInt - 12 : endHourInt === 0 ? 12 : endHourInt).padStart(2, '0')}:${String(endMinInt).padStart(2, '0')} ${endAmPm}`;
+
+          const timeDisplay = `${dateString} ${startDisp} - ${endDisp}`;
+          const formattedEndTime = `${dateString} ${String(endHourInt).padStart(2, '0')}:${String(endMinInt).padStart(2, '0')}:00`;
+
+          // Check overlap
+          const [overlapping] = await pool.query(
+            'SELECT id, title, time_display, purpose FROM bookings WHERE title = ? AND time_display = ? AND status = "Approved"',
+            [roomName, timeDisplay]
+          );
+
+          generatedBookings.push({
+            room_name: roomName,
+            date: dateString,
+            day_of_week: dayOfWeek,
+            time_display: timeDisplay,
+            end_time: formattedEndTime,
+            purpose: purpose,
+            assigned_lecturer: lecturer,
+            valid: overlapping.length === 0,
+            conflict_details: overlapping.length > 0 ? `Conflicts with: "${overlapping[0].purpose}"` : null
+          });
+        }
+        current.setDate(current.getDate() + 1);
+      }
+    }
+
+    res.json(generatedBookings);
+  } catch (err) {
+    console.error("Bulk validation error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Bulk insert bookings
+app.post('/api/admin/bookings/bulk-insert', async (req, res) => {
+  const { bookings, userId } = req.body;
+  if (!Array.isArray(bookings) || bookings.length === 0) {
+    return res.status(400).json({ error: 'Missing or empty bookings array.' });
+  }
+
+  try {
+    let successCount = 0;
+    for (const b of bookings) {
+      // First, confirm it doesn't already conflict
+      const [overlapping] = await pool.query(
+        'SELECT id FROM bookings WHERE title = ? AND time_display = ? AND status = "Approved"',
+        [b.room_name, b.time_display]
+      );
+
+      if (overlapping.length === 0) {
+        await pool.query(
+          'INSERT INTO bookings (title, time_display, status, icon, user_id, assigned_lecturer, purpose, end_time) VALUES (?, ?, "Approved", ?, ?, ?, ?, ?)',
+          [
+            b.room_name,
+            b.time_display,
+            b.room_name.toLowerCase().includes('lab') ? 'science' : 'corporate_fare',
+            userId || null,
+            b.assigned_lecturer || null,
+            b.purpose || null,
+            b.end_time
+          ]
+        );
+        successCount++;
+      }
+    }
+    res.json({ success: true, count: successCount });
+  } catch (err) {
+    console.error("Bulk insert error:", err);
     res.status(500).json({ error: err.message });
   }
 });

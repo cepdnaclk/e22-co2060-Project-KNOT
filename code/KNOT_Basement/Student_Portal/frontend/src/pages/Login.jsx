@@ -29,6 +29,8 @@ export default function Login() {
               navigate('/booking-admin');
             } else if (response.data.user.role === 'Lecturer') {
               navigate('/lecturer');
+            } else if (response.data.user.role === 'Technician') {
+              navigate('/technician');
             } else {
               navigate('/');
             }

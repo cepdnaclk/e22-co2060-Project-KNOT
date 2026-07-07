@@ -23,6 +23,26 @@ export default function BookingDashboard() {
   
   const navigate = useNavigate();
 
+  const [semesterStart, setSemesterStart] = useState(() => {
+    const nextMon = new Date();
+    nextMon.setDate(nextMon.getDate() + ((1 + 7 - nextMon.getDay()) % 7 || 7));
+    return nextMon.toISOString().split('T')[0];
+  });
+  const [semesterEnd, setSemesterEnd] = useState(() => {
+    const nextMon = new Date();
+    nextMon.setDate(nextMon.getDate() + ((1 + 7 - nextMon.getDay()) % 7 || 7));
+    nextMon.setDate(nextMon.getDate() + 15 * 7); // 15 weeks
+    return nextMon.toISOString().split('T')[0];
+  });
+  const [bulkRows, setBulkRows] = useState([
+    { roomName: '', dayOfWeek: 'Monday', startTime: '08:30', endTime: '10:30', purpose: '', lecturer: '' }
+  ]);
+  const [pasteData, setPasteData] = useState('');
+  const [validationResults, setValidationResults] = useState(null);
+  const [validating, setValidating] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [importSuccess, setImportSuccess] = useState(null);
+
   useEffect(() => {
     fetchDashboardData();
   }, [activeView]);
@@ -42,7 +62,7 @@ export default function BookingDashboard() {
         if (bookingsRes.ok) setAllBookings(await bookingsRes.json());
       }
 
-      if (activeView === 'rooms') {
+      if (activeView === 'rooms' || activeView === 'bulk-import' || activeView === 'overview') {
         const roomsRes = await fetch('http://localhost:5001/api/admin/rooms');
         if (roomsRes.ok) setRooms(await roomsRes.json());
       }
@@ -116,6 +136,379 @@ export default function BookingDashboard() {
   const handleLogout = () => {
       localStorage.removeItem('knot_user');
       navigate('/login');
+  };
+
+  const handleParsePaste = () => {
+    if (!pasteData.trim()) return;
+    const lines = pasteData.trim().split('\n');
+    const parsed = lines
+      .map(line => {
+        const parts = line.includes('\t') ? line.split('\t') : line.split(',');
+        if (parts.length === 1 && !parts[0].trim()) return null;
+        return {
+          roomName: parts[0]?.trim() || '',
+          dayOfWeek: parts[1]?.trim() || 'Monday',
+          startTime: parts[2]?.trim() || '08:30',
+          endTime: parts[3]?.trim() || '10:30',
+          purpose: parts[4]?.trim() || '',
+          lecturer: parts[5]?.trim() || ''
+        };
+      })
+      .filter(row => row !== null);
+
+    if (parsed.length === 0) return;
+
+    let newRows = [...bulkRows];
+    if (newRows.length === 1 && !newRows[0].roomName && !newRows[0].purpose) {
+      newRows = parsed;
+    } else {
+      newRows = [...newRows, ...parsed];
+    }
+
+    setBulkRows(newRows);
+    setPasteData('');
+  };
+
+  const handleAddBulkRow = () => {
+    setBulkRows([...bulkRows, { roomName: '', dayOfWeek: 'Monday', startTime: '08:30', endTime: '10:30', purpose: '', lecturer: '' }]);
+  };
+
+  const handleRemoveBulkRow = (index) => {
+    const updated = [...bulkRows];
+    updated.splice(index, 1);
+    setBulkRows(updated);
+  };
+
+  const handleBulkRowChange = (index, field, value) => {
+    const updated = [...bulkRows];
+    updated[index][field] = value;
+    setBulkRows(updated);
+  };
+
+  const handleValidateBulk = async () => {
+    for (const r of bulkRows) {
+      if (!r.roomName) {
+        alert("Please select a room for all rows.");
+        return;
+      }
+      if (!r.startTime || !r.endTime) {
+        alert("Please select start and end times for all rows.");
+        return;
+      }
+      if (!r.purpose) {
+        alert("Please specify the purpose for all rows.");
+        return;
+      }
+    }
+
+    setValidating(true);
+    setValidationResults(null);
+    setImportSuccess(null);
+
+    try {
+      const res = await fetch('http://localhost:5001/api/admin/bookings/bulk-validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          semesterStart,
+          semesterEnd,
+          rows: bulkRows
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setValidationResults(data);
+      } else {
+        alert("Validation request failed.");
+      }
+    } catch (error) {
+      console.error("Error during bulk validation:", error);
+    } finally {
+      setValidating(false);
+    }
+  };
+
+  const handleImportBulk = async () => {
+    if (!validationResults) return;
+    const validBookings = validationResults.filter(b => b.valid);
+    if (validBookings.length === 0) {
+      alert("No valid bookings to import.");
+      return;
+    }
+
+    setImporting(true);
+    try {
+      const userString = localStorage.getItem('knot_user');
+      const user = userString ? JSON.parse(userString) : null;
+
+      const res = await fetch('http://localhost:5001/api/admin/bookings/bulk-insert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookings: validBookings,
+          userId: user?.id
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setImportSuccess({
+          inserted: data.count,
+          skipped: validationResults.length - data.count
+        });
+        setValidationResults(null);
+        setBulkRows([{ roomName: '', dayOfWeek: 'Monday', startTime: '08:30', endTime: '10:30', purpose: '', lecturer: '' }]);
+      } else {
+        alert("Bulk import failed.");
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const renderBulkImport = () => {
+    return (
+      <div className="flex flex-col gap-6 font-display pb-20">
+        <div className="mb-4">
+          <h2 className="text-2xl font-bold text-slate-900">Semester Pre-Bookings Bulk Sheet</h2>
+          <p className="text-slate-500 mt-1">Directly paste schedules from Excel or manage weekly recurring bookings in the sheet below.</p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 lg:col-span-1 flex flex-col gap-4">
+            <h3 className="font-bold text-slate-900 text-sm">1. Semester Timeline</h3>
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Start Date</label>
+              <input 
+                type="date" 
+                value={semesterStart} 
+                onChange={e => setSemesterStart(e.target.value)} 
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/50 text-sm font-medium text-slate-700" 
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase mb-1">End Date</label>
+              <input 
+                type="date" 
+                value={semesterEnd} 
+                onChange={e => setSemesterEnd(e.target.value)} 
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/50 text-sm font-medium text-slate-700" 
+              />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 lg:col-span-2 flex flex-col gap-3">
+            <h3 className="font-bold text-slate-900 text-sm">2. Fast Excel Paste</h3>
+            <p className="text-xs text-slate-400 font-medium">Copy columns from Excel / Google Sheets and paste them here. Columns order must be: <br/>
+              <span className="font-mono bg-slate-100 px-1 py-0.5 rounded text-[10px] text-slate-600">Room Name (tab) Day of Week (tab) Start Time (tab) End Time (tab) Purpose (tab) Lecturer</span>
+            </p>
+            <textarea
+              value={pasteData}
+              onChange={e => setPasteData(e.target.value)}
+              placeholder="Example:&#10;EOE Hall - Engineering South	Monday	08:30	10:30	CO324 Lecture	Dr. Smith"
+              className="w-full h-24 p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/50 text-xs font-mono resize-none"
+            />
+            <button 
+              type="button" 
+              onClick={handleParsePaste}
+              className="self-end bg-slate-900 text-white text-xs font-bold py-2 px-4 rounded-xl hover:bg-slate-800 transition-colors shadow-sm"
+            >
+              Parse & Append Rows
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+            <h3 className="font-bold text-slate-900 text-sm">3. Recurring Schedule Sheet</h3>
+            <button 
+              type="button" 
+              onClick={handleAddBulkRow}
+              className="flex items-center gap-1.5 bg-primary/10 text-primary hover:bg-primary/20 text-xs font-bold py-2 px-3 rounded-xl transition-all"
+            >
+              <Plus size={14} /> Add Row
+            </button>
+          </div>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm text-slate-650">
+              <thead className="bg-slate-50 text-slate-900 font-bold border-b border-slate-200 text-xs uppercase tracking-wider">
+                <tr>
+                  <th className="px-4 py-3 min-w-[200px]">Room</th>
+                  <th className="px-4 py-3 min-w-[130px]">Day of Week</th>
+                  <th className="px-4 py-3 min-w-[110px]">Start Time</th>
+                  <th className="px-4 py-3 min-w-[110px]">End Time</th>
+                  <th className="px-4 py-3 min-w-[180px]">Course / Purpose</th>
+                  <th className="px-4 py-3 min-w-[150px]">Lecturer</th>
+                  <th className="px-4 py-3 text-center w-12">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {bulkRows.map((row, idx) => (
+                  <tr key={idx} className="hover:bg-slate-50/30 transition-colors">
+                    <td className="px-3 py-2">
+                      <select
+                        value={row.roomName}
+                        onChange={e => handleBulkRowChange(idx, 'roomName', e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-medium text-slate-700 focus:ring-1 focus:ring-primary/50"
+                      >
+                        <option value="">-- Select Room --</option>
+                        {rooms.map(room => (
+                          <option key={room.id} value={room.name}>{room.name}</option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="px-3 py-2">
+                      <select
+                        value={row.dayOfWeek}
+                        onChange={e => handleBulkRowChange(idx, 'dayOfWeek', e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-medium text-slate-700"
+                      >
+                        {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(d => (
+                          <option key={d} value={d}>{d}</option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="px-3 py-2">
+                      <input 
+                        type="time" 
+                        value={row.startTime} 
+                        onChange={e => handleBulkRowChange(idx, 'startTime', e.target.value)} 
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-medium text-slate-700" 
+                      />
+                    </td>
+                    <td className="px-3 py-2">
+                      <input 
+                        type="time" 
+                        value={row.endTime} 
+                        onChange={e => handleBulkRowChange(idx, 'endTime', e.target.value)} 
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-medium text-slate-700" 
+                      />
+                    </td>
+                    <td className="px-3 py-2">
+                      <input 
+                        type="text" 
+                        value={row.purpose} 
+                        placeholder="e.g. CO324 Lecture"
+                        onChange={e => handleBulkRowChange(idx, 'purpose', e.target.value)} 
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-medium text-slate-750 placeholder:text-slate-400 focus:ring-1 focus:ring-primary/50" 
+                      />
+                    </td>
+                    <td className="px-3 py-2">
+                      <input 
+                        type="text" 
+                        value={row.lecturer} 
+                        placeholder="e.g. Dr. Smith"
+                        onChange={e => handleBulkRowChange(idx, 'lecturer', e.target.value)} 
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-medium text-slate-700" 
+                      />
+                    </td>
+                    <td className="px-3 py-2 text-center">
+                      <button 
+                        type="button" 
+                        disabled={bulkRows.length <= 1}
+                        onClick={() => handleRemoveBulkRow(idx)}
+                        className="text-red-500 hover:text-red-700 disabled:opacity-30 p-1 rounded hover:bg-red-50 transition-colors"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          <div className="p-4 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/30">
+            <button 
+              type="button" 
+              onClick={handleValidateBulk} 
+              disabled={validating}
+              className="bg-primary text-white text-xs font-bold py-2.5 px-6 rounded-xl hover:bg-primary/95 transition-all shadow-md shadow-primary/10 disabled:opacity-50 flex items-center gap-1.5"
+            >
+              {validating ? 'Validating...' : 'Validate Schedule & Conflicts'}
+            </button>
+          </div>
+        </div>
+
+        {importSuccess && (
+          <div className="bg-emerald-50 border border-emerald-250 p-6 rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <h4 className="font-bold text-emerald-800 flex items-center gap-2">
+                <CheckCircle2 size={20} />
+                Schedules Imported Successfully!
+              </h4>
+              <p className="text-emerald-700 text-xs mt-1 font-medium">
+                Successfully inserted **{importSuccess.inserted}** recurring bookings for the semester. **{importSuccess.skipped}** bookings were skipped due to overlaps.
+              </p>
+            </div>
+            <button 
+              onClick={() => setImportSuccess(null)}
+              className="text-xs bg-emerald-600 hover:bg-emerald-750 text-white font-bold py-2 px-4 rounded-xl shadow-sm transition-all shrink-0"
+            >
+              Clear Notice
+            </button>
+          </div>
+        )}
+
+        {validationResults && (
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col gap-4 animate-fade-in">
+            <div className="flex justify-between items-end border-b border-slate-100 pb-4">
+              <div>
+                <h3 className="font-bold text-slate-900">4. Generated Booking Dates</h3>
+                <p className="text-slate-500 text-xs mt-1">Review validation output. Conflicts are highlighted in red and will be skipped.</p>
+              </div>
+              <button 
+                type="button" 
+                onClick={handleImportBulk}
+                disabled={importing}
+                className="bg-green-600 text-white text-xs font-bold py-2.5 px-5 rounded-xl hover:bg-green-700 transition-all shadow-md shadow-green-600/10"
+              >
+                {importing ? 'Importing...' : `Import ${validationResults.filter(b => b.valid).length} Valid Bookings`}
+              </button>
+            </div>
+
+            <div className="max-h-80 overflow-y-auto border border-slate-100 rounded-xl">
+              <table className="w-full text-left text-xs text-slate-600">
+                <thead className="bg-slate-50 text-slate-900 font-bold sticky top-0 border-b border-slate-200">
+                  <tr>
+                    <th className="px-4 py-3">Date</th>
+                    <th className="px-4 py-3">Day</th>
+                    <th className="px-4 py-3">Time</th>
+                    <th className="px-4 py-3">Room</th>
+                    <th className="px-4 py-3">Purpose</th>
+                    <th className="px-4 py-3">Lecturer</th>
+                    <th className="px-4 py-3">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {validationResults.map((val, idx) => (
+                    <tr key={idx} className={val.valid ? "hover:bg-slate-50" : "bg-red-50/20 hover:bg-red-50/30"}>
+                      <td className="px-4 py-3 font-semibold text-slate-900">{val.date}</td>
+                      <td className="px-4 py-3">{val.day_of_week}</td>
+                      <td className="px-4 py-3">{val.time_display.split(' ').slice(1).join(' ')}</td>
+                      <td className="px-4 py-3 font-medium text-slate-700">{val.room_name}</td>
+                      <td className="px-4 py-3">{val.purpose}</td>
+                      <td className="px-4 py-3">{val.assigned_lecturer}</td>
+                      <td className="px-4 py-3">
+                        <span className={`px-2 py-0.5 rounded-full font-bold text-[9px] uppercase ${val.valid ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                          {val.valid ? 'Valid' : 'Conflict'}
+                        </span>
+                        {val.conflict_details && (
+                          <span className="block text-[10px] text-red-650 font-medium italic mt-0.5">{val.conflict_details}</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   const renderOverview = () => (
@@ -407,6 +800,10 @@ export default function BookingDashboard() {
             <DoorOpen size={20} className="shrink-0" />
             {sidebarOpen && <span className="font-semibold text-sm">Room Management</span>}
           </button>
+          <button onClick={() => setActiveView('bulk-import')} className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-colors ${activeView === 'bulk-import' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}>
+            <svg className="w-5 h-5 shrink-0 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            {sidebarOpen && <span className="font-semibold text-sm">Bulk Import</span>}
+          </button>
         </nav>
 
         <div className="p-4 border-t border-slate-800 shrink-0">
@@ -448,6 +845,7 @@ export default function BookingDashboard() {
           {activeView === 'pending' && renderPending()}
           {activeView === 'all-bookings' && renderAllBookings()}
           {activeView === 'rooms' && renderRooms()}
+          {activeView === 'bulk-import' && renderBulkImport()}
         </div>
       </main>
     </div>

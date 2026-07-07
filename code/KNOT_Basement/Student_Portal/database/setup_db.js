@@ -46,7 +46,9 @@ async function setupDatabase() {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         resolved_at DATETIME NULL,
         user_id INT,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+        assigned_technician_id INT,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+        FOREIGN KEY (assigned_technician_id) REFERENCES users(id) ON DELETE SET NULL
       );
     `);
 
@@ -138,6 +140,22 @@ async function setupDatabase() {
       await connection.query(`
         INSERT INTO users (username, password, name, role, department) 
         VALUES ('lecturer1', '1234', 'Dr. Smith', 'Lecturer', 'Department of Computer Engineering')
+      `);
+    }
+
+    const [alexRows] = await connection.query(`SELECT * FROM users WHERE username = 'alex'`);
+    if (alexRows.length === 0) {
+      await connection.query(`
+        INSERT INTO users (username, password, name, role, department) 
+        VALUES ('alex', '1234', 'Alex Johnson', 'Technician', 'Facilities Management')
+      `);
+    }
+
+    const [samRows] = await connection.query(`SELECT * FROM users WHERE username = 'sam'`);
+    if (samRows.length === 0) {
+      await connection.query(`
+        INSERT INTO users (username, password, name, role, department) 
+        VALUES ('sam', '1234', 'Sam Carter', 'Technician', 'Facilities Management')
       `);
     }
 
