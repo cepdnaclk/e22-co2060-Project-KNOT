@@ -10,7 +10,7 @@ app.use(express.json());
 const pool = mysql.createPool({
   host: 'localhost',
   user: 'root',
-  password: 'new_password',
+  password: 'Nov06ember##',
   database: 'knot_db',
   waitForConnections: true,
   connectionLimit: 10,
@@ -91,9 +91,31 @@ app.get('/api/bookings/:userId', async (req, res) => {
   }
 });
 
+app.get('/api/availability', async (req, res) => {
+  const { date, title } = req.query;
+  try {
+    const [rows] = await pool.query(
+      'SELECT id, time_display, end_time, status FROM bookings WHERE title = ? AND time_display LIKE ? AND status IN ("Approved", "Pending", "Pending AR")',
+      [title, `${date}%`]
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post('/api/bookings', async (req, res) => {
   const { title, time_display, user_id, icon, status, end_time, assigned_lecturer, purpose } = req.body;
   try {
+    // Check for conflicts
+    const [overlapping] = await pool.query(
+      'SELECT id FROM bookings WHERE title = ? AND time_display = ? AND status IN ("Approved", "Pending", "Pending AR")',
+      [title, time_display]
+    );
+    if (overlapping.length > 0) {
+      return res.status(409).json({ error: 'Time slot is already booked or pending.' });
+    }
+
     const [result] = await pool.query(
       'INSERT INTO bookings (title, time_display, user_id, icon, status, end_time, assigned_lecturer, purpose) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
       [title, time_display, user_id, icon || 'meeting_room', status || 'Pending', end_time, assigned_lecturer || null, purpose || null]
@@ -103,6 +125,7 @@ app.post('/api/bookings', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 // Lecturer Endpoints
 app.get('/api/lecturer/requests/:id', async (req, res) => {
