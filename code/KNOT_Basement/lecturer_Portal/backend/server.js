@@ -71,12 +71,33 @@ app.get('/api/lecturer/bookings/:userId', async (req, res) => {
   }
 });
 
+// Availability check for lecturer portal
+app.get('/api/lecturer/availability', async (req, res) => {
+  const { date, title } = req.query;
+  try {
+    const [rows] = await pool.query(
+      'SELECT id, time_display, status FROM bookings WHERE title = ? AND time_display LIKE ? AND status IN ("Approved", "Pending", "Pending AR")',
+      [title, `${date}%`]
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post('/api/lecturer/bookings', async (req, res) => {
   const { title, time_display, user_id, icon, status, end_time, purpose } = req.body;
   try {
-    // Status is always "Pending AR" for Lecturer own bookings
+    // Conflict check
+    const [overlapping] = await pool.query(
+      'SELECT id FROM bookings WHERE title = ? AND time_display = ? AND status IN ("Approved", "Pending", "Pending AR")',
+      [title, time_display]
+    );
+    if (overlapping.length > 0) {
+      return res.status(409).json({ error: 'Time slot is already booked or pending.' });
+    }
+
     const finalStatus = 'Pending AR';
-    
     const [result] = await pool.query(
       'INSERT INTO bookings (title, time_display, user_id, icon, status, end_time, purpose) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [title, time_display, user_id, icon || 'meeting_room', finalStatus, end_time || null, purpose]
@@ -86,6 +107,7 @@ app.post('/api/lecturer/bookings', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 // Student Requests to Lecturer
 app.get('/api/lecturer/requests/:id', async (req, res) => {
