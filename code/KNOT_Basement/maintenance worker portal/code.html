@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<title>KNOT Operations - Maintenance Dashboard</title>
+<!-- Google Fonts: Space Grotesk for technical feel -->
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary-fixed-variant": "#004884",
+                    "secondary-fixed-dim": "#b9c7df",
+                    "on-error": "#ffffff",
+                    "secondary": "#515f74",
+                    "error": "#ef4444",
+                    "slate-text": "#0f172a",
+                    "tertiary-container": "#af6100",
+                    "secondary-fixed": "#d5e3fc",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-dim": "#d8dae1",
+                    "on-surface-variant": "#414752",
+                    "on-primary-fixed": "#001c39",
+                    "background-light": "#f6f7f8",
+                    "primary": "#005da8",
+                    "on-secondary-fixed": "#0d1c2e",
+                    "on-error-container": "#93000a",
+                    "surface-tint": "#005fac",
+                    "primary-fixed-dim": "#a4c9ff",
+                    "on-secondary": "#ffffff",
+                    "info": "#3b82f6",
+                    "primary-container": "#2276cb",
+                    "success": "#10b981",
+                    "tertiary-fixed": "#ffdcc1",
+                    "on-background": "#191c21",
+                    "on-surface": "#191c21",
+                    "inverse-primary": "#a4c9ff",
+                    "surface-container-low": "#f2f3fb",
+                    "outline": "#717783",
+                    "error-container": "#ffdad6",
+                    "background": "#f8f9ff",
+                    "on-secondary-fixed-variant": "#3a485b",
+                    "surface-variant": "#e0e2ea",
+                    "surface-container-highest": "#e0e2ea",
+                    "on-primary": "#ffffff",
+                    "on-primary-container": "#fdfcff",
+                    "secondary-container": "#d5e3fc",
+                    "surface-container": "#ecedf5",
+                    "on-tertiary-fixed-variant": "#6c3a00",
+                    "surface-container-high": "#e6e8ef",
+                    "tertiary-fixed-dim": "#ffb779",
+                    "inverse-on-surface": "#eff0f8",
+                    "on-tertiary-container": "#fffbff",
+                    "surface-bright": "#f8f9ff",
+                    "tertiary": "#8b4c00",
+                    "background-dark": "#121920",
+                    "surface": "#f8f9ff",
+                    "primary-fixed": "#d4e3ff",
+                    "inverse-surface": "#2d3036",
+                    "on-tertiary": "#ffffff",
+                    "outline-variant": "#c1c7d3",
+                    "on-secondary-container": "#57657a",
+                    "warning": "#f59e0b",
+                    "on-tertiary-fixed": "#2e1500"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "container-max": "1280px",
+                    "card-padding": "1.5rem",
+                    "section-gap": "2rem",
+                    "stack-sm": "0.5rem",
+                    "gutter": "1.5rem",
+                    "stack-md": "1rem"
+            },
+            "fontFamily": {
+                    "headline-md": ["Space Grotesk"],
+                    "display-lg": ["Space Grotesk"],
+                    "label-xs": ["Space Grotesk"],
+                    "body-sm": ["Space Grotesk"],
+                    "body-md": ["Space Grotesk"],
+                    "title-sm": ["Space Grotesk"]
+            },
+            "fontSize": {
+                    "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "display-lg": ["30px", {"lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-xs": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "title-sm": ["16px", {"lineHeight": "24px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 1rem;
+        }
+        @media (max-width: 768px) {
+            .bento-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        .live-pulse {
+            position: relative;
+        }
+        .live-pulse::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            top: 0;
+            right: -4px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen pb-24">
+<!-- TopAppBar -->
+<header class="bg-surface w-full top-0 sticky z-40 border-b border-primary/10 shadow-sm">
+<div class="flex justify-between items-center px-4 py-3 w-full max-w-container-max mx-auto">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20 bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="Professional headshot of a maintenance worker in a navy blue branded uniform. The background is a clean, modern workshop with subtle bokeh. High-quality lighting highlights features, evoking a sense of reliability and technical expertise for the KNOT Operations platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCuD19szzEn9YItRipuOlXEMnRINir5ZVgh-18u6M2MxvW8Yd3GHOdoeY3dTFaBw2GygDvF57pPc2eGCim7xDU_qpWxkR3kairXM_FrsDcWilTHEpqDO7SnKI19y6nu5XxaclQgZO-4UBiq8kYXHgusgE6aFZUcWQ6-ExzZgUtD9J3QcIY_y4Gw0dc6HeQs4dqKshJOnBM59Ad8TdWD2OiYcNG5JBu9KjXU_PPTsbodfg79NEbF5bW3qYrLIVS7yzMPy3_ZhQCutEo"/>
+</div>
+<div>
+<h1 class="font-display-lg text-headline-md text-primary leading-tight">KNOT Operations</h1>
+</div>
+</div>
+<button class="p-2 rounded-full hover:bg-primary/5 transition-colors active:scale-95 duration-100 text-primary">
+<span class="material-symbols-outlined text-[28px]" data-icon="qr_code_scanner">qr_code_scanner</span>
+</button>
+</div>
+</header>
+<main class="max-w-container-max mx-auto px-4 py-6 flex flex-col gap-8">
+<!-- Welcome Header -->
+<section>
+<div class="flex flex-col">
+<p class="font-label-xs text-label-xs text-secondary uppercase tracking-widest mb-1">Worker ID: #KN-4092</p>
+<h2 class="font-display-lg text-display-lg text-on-background">Good Morning, Alex</h2>
+<div class="flex items-center gap-2 mt-2">
+<span class="live-pulse"></span>
+<span class="font-body-sm text-body-sm text-success font-medium ml-2">Shift Active • Building A-Sector 4</span>
+</div>
+</div>
+</section>
+<!-- Status Cards: Bento Layout -->
+<section class="bento-grid">
+<div class="col-span-2 md:col-span-2 bg-surface-container-lowest border border-primary/10 p-5 rounded-xl shadow-sm flex flex-col justify-between">
+<span class="material-symbols-outlined text-primary mb-2" data-icon="assignment">assignment</span>
+<div>
+<p class="font-label-xs text-label-xs text-secondary">Assigned Tasks</p>
+<p class="font-display-lg text-[32px] text-on-background">05</p>
+</div>
+</div>
+<div class="col-span-2 md:col-span-2 bg-error-container/20 border border-error/20 p-5 rounded-xl shadow-sm flex flex-col justify-between">
+<span class="material-symbols-outlined text-error mb-2" data-icon="priority_high">priority_high</span>
+<div>
+<p class="font-label-xs text-label-xs text-error">Urgent Tasks</p>
+<p class="font-display-lg text-[32px] text-error">02</p>
+</div>
+</div>
+<div class="col-span-2 md:col-span-2 bg-primary/5 border border-primary/10 p-5 rounded-xl shadow-sm flex flex-col justify-between">
+<span class="material-symbols-outlined text-primary mb-2" data-icon="timer">timer</span>
+<div>
+<p class="font-label-xs text-label-xs text-secondary">Shift Ends In</p>
+<p class="font-display-lg text-[32px] text-on-background">4h 20m</p>
+</div>
+</div>
+</section>
+<!-- Today's Agenda -->
+<section class="flex flex-col gap-4">
+<div class="flex justify-between items-end">
+<h3 class="font-headline-md text-headline-md text-on-background">Today's Agenda</h3>
+<button class="font-label-xs text-label-xs text-primary hover:underline">View Schedule</button>
+</div>
+<div class="flex flex-col gap-3">
+<!-- Task 1 -->
+<div class="bg-surface border border-primary/10 rounded-xl p-4 flex gap-4 items-center hover:bg-primary/5 transition-colors cursor-pointer">
+<div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center text-primary flex-shrink-0">
+<span class="material-symbols-outlined" data-icon="ac_unit">ac_unit</span>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-start">
+<h4 class="font-title-sm text-title-sm text-on-background">EOE Hall - AC Repair</h4>
+<span class="bg-error/10 text-error text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter">High Priority</span>
+</div>
+<div class="flex items-center gap-3 mt-1 text-secondary">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="schedule">schedule</span>
+<span class="font-body-sm text-body-sm">09:00 - 10:30</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="location_on">location_on</span>
+<span class="font-body-sm text-body-sm">Floor 2, Room 204</span>
+</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-secondary/40" data-icon="chevron_right">chevron_right</span>
+</div>
+<!-- Task 2 -->
+<div class="bg-surface border border-primary/10 rounded-xl p-4 flex gap-4 items-center hover:bg-primary/5 transition-colors cursor-pointer">
+<div class="w-12 h-12 bg-secondary-container/50 rounded-lg flex items-center justify-center text-secondary flex-shrink-0">
+<span class="material-symbols-outlined" data-icon="settings_ethernet">settings_ethernet</span>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-start">
+<h4 class="font-title-sm text-title-sm text-on-background">Lab 402 - Network Port</h4>
+<span class="bg-warning/10 text-warning text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter">Medium Priority</span>
+</div>
+<div class="flex items-center gap-3 mt-1 text-secondary">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="schedule">schedule</span>
+<span class="font-body-sm text-body-sm">11:00 - 12:00</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="location_on">location_on</span>
+<span class="font-body-sm text-body-sm">East Wing</span>
+</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-secondary/40" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+</section>
+<!-- Quick Actions -->
+<section class="flex flex-col gap-4">
+<h3 class="font-headline-md text-headline-md text-on-background">Quick Actions</h3>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<button class="flex items-center justify-center gap-4 bg-primary text-on-primary py-5 px-6 rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all w-full text-left">
+<span class="material-symbols-outlined text-[32px]" data-icon="qr_code_scanner">qr_code_scanner</span>
+<span class="font-title-sm text-title-sm">Scan Equipment</span>
+</button>
+<button class="flex items-center justify-center gap-4 bg-surface-container-high text-on-surface py-5 px-6 rounded-xl border border-primary/10 shadow-sm hover:bg-primary/5 active:scale-95 transition-all w-full">
+<span class="material-symbols-outlined text-[32px] text-primary" data-icon="inventory_2">inventory_2</span>
+<span class="font-title-sm text-title-sm">Update Inventory</span>
+</button>
+<button class="flex items-center justify-center gap-4 bg-surface-container-high text-on-surface py-5 px-6 rounded-xl border border-primary/10 shadow-sm hover:bg-primary/5 active:scale-95 transition-all w-full">
+<span class="material-symbols-outlined text-[32px] text-secondary" data-icon="coffee">coffee</span>
+<span class="font-title-sm text-title-sm">Log Break</span>
+</button>
+</div>
+</section>
+<!-- Informational Status -->
+<section class="mb-8">
+<div class="bg-primary/5 border border-primary/20 rounded-xl p-6 relative overflow-hidden">
+<div class="relative z-10">
+<h4 class="font-title-sm text-title-sm text-primary mb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px]" data-icon="info">info</span>
+                        Fleet Health Status
+                    </h4>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-md">94% of operational equipment in Building A is performing within normal parameters. 3 maintenance cycles due this week.</p>
+</div>
+<!-- Background decoration element -->
+<div class="absolute -right-10 -bottom-10 opacity-5">
+<span class="material-symbols-outlined text-[200px]" data-icon="construction">construction</span>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 py-3 pb-safe bg-surface border-t border-primary/10 shadow-sm">
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-xs text-label-xs">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary hover:bg-secondary-container/50 px-4 py-1 rounded-full active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="assignment_turned_in">assignment_turned_in</span>
+<span class="font-label-xs text-label-xs">My Tasks</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary hover:bg-secondary-container/50 px-4 py-1 rounded-full active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span class="font-label-xs text-label-xs">Inventory</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary hover:bg-secondary-container/50 px-4 py-1 rounded-full active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-xs text-label-xs">Profile</span>
+</a>
+</nav>
+<script>
+        // Micro-interaction for feedback
+        document.querySelectorAll('button, a').forEach(el => {
+            el.addEventListener('click', () => {
+                // Subtle haptic-like feedback logic would go here
+            });
+        });
+
+        // Simulating some "live" data changes
+        setInterval(() => {
+            const timeEl = document.querySelector('.bento-grid div:last-child p:last-child');
+            if (timeEl) {
+                // Just a visual flicker to simulate "live" data updates
+                timeEl.style.opacity = '0.7';
+                setTimeout(() => timeEl.style.opacity = '1', 100);
+            }
+        }, 15000);
+    </script>
+</body></html>
