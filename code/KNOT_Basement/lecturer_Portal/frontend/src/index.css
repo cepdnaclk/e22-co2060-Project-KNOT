@@ -1,0 +1,8 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    @apply bg-[#f6f7f8] text-slate-900 antialiased;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+}
