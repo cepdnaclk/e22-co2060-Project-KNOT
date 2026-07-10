@@ -6,56 +6,6 @@
 
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-900 antialiased;
+    @apply font-display bg-background-light text-slate-900 m-0 p-0;
   }
-}
-
-@layer components {
-  .loader-container {
-    @apply fixed inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm z-[999];
-  }
-  
-  .glass-card {
-    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-xl;
-  }
-
-  /* Custom Animations */
-  .animate-stagger-fade-in > * {
-    opacity: 0;
-    transform: translateY(10px);
-    animation: staggerFadeIn 0.4s ease-out forwards;
-  }
-
-  .animate-stagger-fade-in > *:nth-child(1) { animation-delay: 0.1s; }
-  .animate-stagger-fade-in > *:nth-child(2) { animation-delay: 0.15s; }
-  .animate-stagger-fade-in > *:nth-child(3) { animation-delay: 0.2s; }
-  .animate-stagger-fade-in > *:nth-child(4) { animation-delay: 0.25s; }
-  .animate-stagger-fade-in > *:nth-child(5) { animation-delay: 0.3s; }
-}
-
-@keyframes staggerFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.leaflet-container {
-  @apply rounded-xl overflow-hidden shadow-inner;
-  z-index: 10 !important;
-}
-
-/* Custom scrollbar for better look */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  @apply bg-slate-100;
-}
-::-webkit-scrollbar-thumb {
-  @apply bg-slate-300 rounded-full hover:bg-slate-400 transition-colors;
 }

@@ -7,139 +7,61 @@ const PORT = process.env.PORT || 5003;
 
 app.use(cors());
 app.use(express.json());
-
-// Mock data to fallback on if DB is unavailable
-const mockTickets = [
-  {
-    id: 1,
-    ticket_number: 'KNT-1024',
-    title: 'Projector lamp failure in AV system',
-    description: 'Projector lamp failure in AV system',
-    location: 'EOE Hall - Main Entrance',
-    lat: 7.2546,
-    lng: 80.5912,
-    priority: 'High',
-    status: 'In Progress',
-    reported_by: 'Prof. Sarah Jenkins',
-    reported_at: '2023-10-24 09:15:00',
-    maintenance_notes: 'Technician arrived at site. Confirmed the primary lamp module has reached end of life.',
-    category: 'Electrical Issues',
-    assigned_to: 'Alex Technician',
-    history: [
-      { status: 'Open', timestamp: '2023-10-24 09:15:00', note: 'Ticket created' },
-      { status: 'In Progress', timestamp: '2023-10-24 10:30:00', note: 'Assigned to Alex' }
-    ]
-  },
-  {
-    id: 2,
-    ticket_number: 'KNT-1025',
-    title: 'Broken height adjustment on desk #42',
-    description: 'Broken height adjustment on desk #42',
-    location: 'D01 Seminar Room',
-    lat: 7.2550,
-    lng: 80.5915,
-    priority: 'Medium',
-    status: 'Open',
-    reported_by: 'John Doe',
-    reported_at: '2023-10-24 10:30:00',
-    maintenance_notes: '',
-    category: 'Furniture Repairs',
-    assigned_to: null,
-    history: [{ status: 'Open', timestamp: '2023-10-24 10:30:00', note: 'Ticket created' }]
-  },
-  {
-    id: 3,
-    ticket_number: 'KNT-1026',
-    title: 'Flickering overhead light in aisle D',
-    description: 'Flickering overhead light in aisle D',
-    location: 'Library Level 2',
-    lat: 7.2542,
-    lng: 80.5910,
-    priority: 'Low',
-    status: 'Open',
-    reported_by: 'Maintenance Bot',
-    reported_at: '2023-10-24 07:00:00',
-    maintenance_notes: '',
-    category: 'Electrical Issues',
-    assigned_to: null,
-    history: [{ status: 'Open', timestamp: '2023-10-24 07:00:00', note: 'Detected by sensor' }]
-  },
-  {
-    id: 4,
-    ticket_number: 'KNT-1027',
-    title: 'Water leak detected near refrigeration unit',
-    description: 'Water leak detected near refrigeration unit',
-    location: 'Cafeteria Annex',
-    lat: 7.2555,
-    lng: 80.5920,
-    priority: 'High',
-    status: 'Open',
-    reported_by: 'Facility Manager',
-    reported_at: '2023-10-24 11:45:00',
-    maintenance_notes: '',
-    category: 'HVAC Maintenance',
-    assigned_to: null,
-    history: [{ status: 'Open', timestamp: '2023-10-24 11:45:00', note: 'Ticket created' }]
-  },
-  {
-    id: 5,
-    ticket_number: 'KNT-1028',
-    title: 'HVAC Unit #3 making unusual noise',
-    description: 'The unit in the server room is vibrating excessively.',
-    location: 'Data Center B',
-    lat: 7.2560,
-    lng: 80.5905,
-    priority: 'Medium',
-    status: 'In Progress',
-    reported_by: 'IT Operations',
-    reported_at: '2023-10-25 08:30:00',
-    maintenance_notes: 'Inspected fans. Possible bearing failure.',
-    category: 'HVAC Maintenance',
-    assigned_to: 'Sarah Engineer',
-    history: [
-      { status: 'Open', timestamp: '2023-10-25 08:30:00', note: 'Ticket created' },
-      { status: 'In Progress', timestamp: '2023-10-25 09:00:00', note: 'Sarah assigned' }
-    ]
-  },
-  {
-    id: 6,
-    ticket_number: 'KNT-1029',
-    title: 'Security camera #12 offline',
-    description: 'Video feed lost for the last 2 hours.',
-    location: 'North Gate Entrance',
-    lat: 7.2530,
-    lng: 80.5930,
-    priority: 'High',
-    status: 'Open',
-    reported_by: 'Security Team',
-    reported_at: '2023-10-25 14:20:00',
-    maintenance_notes: '',
-    category: 'Security Systems',
-    assigned_to: null,
-    history: [{ status: 'Open', timestamp: '2023-10-25 14:20:00', note: 'Ticket created' }]
-  }
-];
-
-const mockEquipment = [
-  { id: 1, name: 'Digital Multimeter', category: 'Electrical', status: 'Available', last_used: '2023-10-23' },
-  { id: 2, name: 'Refrigerant Leak Detector', category: 'HVAC', status: 'In Use', last_used: '2023-10-24' },
-  { id: 3, name: 'Heavy Duty Drill', category: 'General', status: 'Maintenance', last_used: '2023-10-20' },
-  { id: 4, name: 'Network Cable Tester', category: 'IT', status: 'Available', last_used: '2023-10-25' },
-  { id: 5, name: 'Thermal Imaging Camera', category: 'Inspection', status: 'Available', last_used: '2023-10-22' }
-];
+const path = require('path');
+// Serve Maintenance Worker Portal (folder with spaces in name)
+const workerPortalPath = path.join(__dirname, '..', '..', 'maintenance worker portal');
+app.use('/maintenance_worker_portal', express.static(workerPortalPath, { index: 'code.html' }));
+console.log('Worker portal static path:', workerPortalPath);
 
 // Initialize missing columns in faults table if they don't exist
 async function initDB() {
   try {
     await pool.query('ALTER TABLE faults ADD COLUMN maintenance_notes TEXT');
-    await pool.query('ALTER TABLE faults ADD COLUMN photo_url VARCHAR(255)');
-    await pool.query('ALTER TABLE faults ADD COLUMN assigned_to VARCHAR(100)');
-    await pool.query('ALTER TABLE faults ADD COLUMN history JSON');
-  } catch (err) {
-    // Ignore error
+  } catch(err) {
+    if (err.code !== 'ER_DUP_FIELDNAME') console.error("DB init error (notes):", err.message);
+  }
+  try {
+    await pool.query('ALTER TABLE faults MODIFY COLUMN photo_url LONGTEXT');
+  } catch(err) {
+    try {
+      await pool.query('ALTER TABLE faults ADD COLUMN photo_url LONGTEXT');
+    } catch(e) {
+      console.error("DB init error (photo):", e.message);
+    }
+  }
+  try {
+    await pool.query('ALTER TABLE faults ADD COLUMN worker_photo LONGTEXT');
+  } catch(err) {
+    if (err.code !== 'ER_DUP_FIELDNAME') console.error("DB init error (worker_photo):", err.message);
+  }
+  try {
+    await pool.query('ALTER TABLE faults ADD COLUMN assigned_technician_id INT');
+  } catch(err) {
+    if (err.code !== 'ER_DUP_FIELDNAME') console.error("DB init error (assigned_technician_id):", err.message);
+  }
+  try {
+    await pool.query('ALTER TABLE faults ADD COLUMN admin_verified TINYINT(1) DEFAULT 0');
+  } catch(err) {
+    if (err.code !== 'ER_DUP_FIELDNAME') console.error("DB init error (admin_verified):", err.message);
   }
 }
 initDB();
+
+// Ensure a default admin user exists (fallback credentials)
+(async () => {
+  try {
+    const [rows] = await pool.query('SELECT id FROM users WHERE email = ?', ['admin']);
+    if (rows.length === 0) {
+      await pool.query(
+        "INSERT INTO users (email, name, password, role) VALUES (?, ?, ?, ?)",
+        ['admin', 'System Admin', 'adminpass', 'maintenance_admin']
+      );
+      console.log('Created default admin user (admin / adminpass)');
+    }
+  } catch (e) {
+    console.error('Error ensuring admin user exists:', e.message);
+  }
+})();
 
 // Helper to format fault to ticket
 const formatTicket = (fault) => ({
@@ -148,26 +70,31 @@ const formatTicket = (fault) => ({
   title: fault.title,
   description: fault.description,
   location: fault.location,
-  lat: fault.lat,
-  lng: fault.lng,
   priority: fault.priority,
   status: fault.status === 'In Progress' ? 'In Progress' : fault.status === 'Resolved' ? 'Resolved' : 'Open',
   reported_by: fault.reporter_name || 'Unknown',
   reported_at: fault.created_at,
   maintenance_notes: fault.maintenance_notes || '',
-  category: fault.category || 'General',
+  category: 'General',
   photo_url: fault.photo_url || null,
-  assigned_to: fault.assigned_to || null,
-  history: fault.history ? JSON.parse(fault.history) : []
+  worker_photo: fault.worker_photo || null,
+  assigned_technician_id: fault.assigned_technician_id || null,
+  assigned_technician_name: fault.technician_name || null,
+  admin_verified: fault.admin_verified ? true : false
 });
 
-// Login
-app.post('/api/auth/login', (req, res) => {
+// Login an administrator or worker
+app.post('/api/auth/login', async (req, res) => {
   const { username, password } = req.body;
-  if (username === 'admin' && password === 'adminpass') {
-    res.json({ token: 'mock-jwt-token-12345', name: 'System Admin' });
-  } else {
-    res.status(401).json({ error: 'Invalid admin credentials' });
+  try {
+    const [rows] = await pool.query('SELECT id, email, username, name, role FROM users WHERE (email = ? OR username = ?) AND password = ?', [username, username, password]);
+    if (rows.length > 0) {
+      res.json({ token: `mock-jwt-token-${rows[0].id}`, name: rows[0].name, role: rows[0].role, id: rows[0].id });
+    } else {
+      res.status(401).json({ error: 'Invalid credentials' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -175,9 +102,10 @@ app.get('/api/tickets', async (req, res) => {
   try {
     const { search, priority, status, page = 1, limit = 10 } = req.query;
     let query = `
-      SELECT f.*, u.name as reporter_name 
+      SELECT f.*, u.name as reporter_name, tech.name as technician_name
       FROM faults f 
       LEFT JOIN users u ON f.user_id = u.id 
+      LEFT JOIN users tech ON f.assigned_technician_id = tech.id
       WHERE 1=1
     `;
     const params = [];
@@ -196,9 +124,9 @@ app.get('/api/tickets', async (req, res) => {
     }
 
     query += ` ORDER BY f.created_at DESC`;
-
+    
     const [allRows] = await pool.query(query, params);
-
+    
     const offset = (page - 1) * limit;
     const paginatedRows = allRows.slice(offset, offset + Number(limit));
 
@@ -211,69 +139,36 @@ app.get('/api/tickets', async (req, res) => {
       }
     });
   } catch (error) {
-    console.warn('DB error, using mock data for /api/tickets');
-    let filteredMocks = [...mockTickets];
-    const { search, priority, status } = req.query;
-
-    if (search) {
-      filteredMocks = filteredMocks.filter(t => 
-        t.title.toLowerCase().includes(search.toLowerCase()) || 
-        t.location.toLowerCase().includes(search.toLowerCase())
-      );
-    }
-    if (priority) {
-      filteredMocks = filteredMocks.filter(t => t.priority === priority);
-    }
-    if (status) {
-      filteredMocks = filteredMocks.filter(t => t.status === status);
-    }
-
-    res.json({
-      data: filteredMocks,
-      pagination: {
-        total: filteredMocks.length,
-        page: 1,
-        limit: 10
-      }
-    });
+    console.error('Error fetching tickets:', error);
+    res.status(500).json({ error: 'Server error fetching tickets' });
   }
 });
 
 app.get('/api/tickets/stats', async (req, res) => {
   try {
     const [rows] = await pool.query(`SELECT status FROM faults`);
+    
+    // Map existing statuses to Open/In Progress/Resolved
     const mappedStatuses = rows.map(r => r.status === 'In Progress' ? 'In Progress' : r.status === 'Resolved' ? 'Resolved' : 'Open');
-
+    
     const open = mappedStatuses.filter(s => s === 'Open').length;
     const inProgress = mappedStatuses.filter(s => s === 'In Progress').length;
     const resolvedToday = mappedStatuses.filter(s => s === 'Resolved').length;
-
+    
     res.json({
       open,
       inProgress,
       resolvedToday,
       resolutionRates: [
-        { category: 'Electrical', rate: 85, history: [40, 55, 60, 85, 75, 85, 85] },
-        { category: 'Furniture', rate: 60, history: [20, 30, 45, 50, 55, 60, 60] },
-        { category: 'HVAC', rate: 45, history: [30, 35, 40, 45, 40, 45, 45] }
+        { category: 'Electrical Issues', rate: 85 },
+        { category: 'Furniture Repairs', rate: 60 },
+        { category: 'HVAC Maintenance', rate: 45 }
       ]
     });
   } catch (error) {
-    res.json({
-      open: 3,
-      inProgress: 2,
-      resolvedToday: 5,
-      resolutionRates: [
-        { category: 'Electrical', rate: 85, history: [40, 55, 60, 85, 75, 85, 85] },
-        { category: 'Furniture', rate: 60, history: [20, 30, 45, 50, 55, 60, 60] },
-        { category: 'HVAC', rate: 45, history: [30, 35, 40, 45, 40, 45, 45] }
-      ]
-    });
+    console.error('Error fetching stats:', error);
+    res.status(500).json({ error: 'Server error fetching stats' });
   }
-});
-
-app.get('/api/equipment', (req, res) => {
-  res.json(mockEquipment);
 });
 
 app.get('/api/tickets/:id', async (req, res) => {
@@ -282,21 +177,21 @@ app.get('/api/tickets/:id', async (req, res) => {
     if (id.startsWith('KNT-')) {
       id = parseInt(id.replace('KNT-', ''), 10) - 1000;
     }
-
+    
     const [rows] = await pool.query(`
-      SELECT f.*, u.name as reporter_name 
+      SELECT f.*, u.name as reporter_name, tech.name as technician_name
       FROM faults f 
       LEFT JOIN users u ON f.user_id = u.id 
+      LEFT JOIN users tech ON f.assigned_technician_id = tech.id
       WHERE f.id = ?
     `, [id]);
-
+    
     if (rows.length === 0) return res.status(404).json({ error: 'Ticket not found' });
-
+    
     res.json(formatTicket(rows[0]));
   } catch (error) {
-    const ticket = mockTickets.find(t => t.id == req.params.id || t.ticket_number == req.params.id);
-    if (ticket) res.json(ticket);
-    else res.status(404).json({ error: 'Ticket not found' });
+    console.error('Error fetching ticket:', error);
+    res.status(500).json({ error: 'Server error fetching ticket' });
   }
 });
 
@@ -306,11 +201,11 @@ app.put('/api/tickets/:id', async (req, res) => {
     if (id.startsWith('KNT-')) {
       id = parseInt(id.replace('KNT-', ''), 10) - 1000;
     }
-
-    const { status, maintenance_notes, photo_url, assigned_to } = req.body;
+    
+    const { status, maintenance_notes, photo_url, worker_photo, assigned_technician_id, admin_verified } = req.body;
     let updateQuery = 'UPDATE faults SET ';
     const params = [];
-
+    
     if (status) {
       updateQuery += 'status = ?, ';
       params.push(status);
@@ -326,18 +221,102 @@ app.put('/api/tickets/:id', async (req, res) => {
       updateQuery += 'photo_url = ?, ';
       params.push(photo_url);
     }
-    if (assigned_to !== undefined) {
-      updateQuery += 'assigned_to = ?, ';
-      params.push(assigned_to);
+    if (worker_photo !== undefined) {
+      updateQuery += 'worker_photo = ?, ';
+      params.push(worker_photo);
     }
-
+    if (assigned_technician_id !== undefined) {
+      updateQuery += 'assigned_technician_id = ?, ';
+      params.push(assigned_technician_id);
+    }
+    if (admin_verified !== undefined) {
+      updateQuery += 'admin_verified = ?, ';
+      params.push(admin_verified ? 1 : 0);
+    }
+    
     updateQuery = updateQuery.slice(0, -2) + ' WHERE id = ?';
     params.push(id);
-
+    
     await pool.query(updateQuery, params);
     res.json({ success: true, message: 'Ticket updated successfully' });
   } catch (error) {
-    res.json({ success: true, message: 'Ticket updated successfully (MOCK)' });
+    console.error('Error updating ticket:', error);
+    res.status(500).json({ error: 'Server error updating ticket' });
+  }
+});
+
+// Create a new ticket / fault report
+app.post('/api/tickets', async (req, res) => {
+  try {
+    const { title, description, location, priority, photo_url, user_id } = req.body;
+    if (!title || !location) {
+      return res.status(400).json({ error: 'Title and location are required' });
+    }
+    const [result] = await pool.query(
+      `INSERT INTO faults (title, description, location, priority, status, user_id, photo_url, created_at)
+       VALUES (?, ?, ?, ?, 'Open', ?, ?, NOW())`,
+      [title, description || '', location, priority || 'Medium', user_id || null, photo_url || null]
+    );
+    res.json({ success: true, id: result.insertId, ticket_number: `KNT-${1000 + result.insertId}` });
+  } catch (error) {
+    console.error('Error creating ticket:', error);
+    res.status(500).json({ error: 'Server error creating ticket' });
+  }
+});
+
+// Technician List (for admin assignment)
+app.get('/api/admin/technicians', async (req, res) => {
+  try {
+    const [rows] = await pool.query("SELECT id, name, username, department FROM users WHERE role = 'Technician'");
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Technician Tasks (get assigned faults)
+app.get('/api/technician/tickets/:userId', async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const [rows] = await pool.query(`
+      SELECT f.*, u.name as reporter_name, tech.name as technician_name
+      FROM faults f
+      LEFT JOIN users u ON f.user_id = u.id
+      LEFT JOIN users tech ON f.assigned_technician_id = tech.id
+      WHERE f.assigned_technician_id = ?
+      ORDER BY f.created_at DESC
+    `, [userId]);
+    res.json(rows.map(formatTicket));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Technician Task Update
+app.put('/api/technician/tickets/:id', async (req, res) => {
+  let id = req.params.id;
+  if (id.startsWith('KNT-')) {
+    id = parseInt(id.replace('KNT-', ''), 10) - 1000;
+  }
+  const { status, maintenance_notes, worker_photo } = req.body;
+  try {
+    const updateFields = [];
+    const params = [];
+    if (status !== undefined) { updateFields.push('status = ?'); params.push(status); }
+    if (maintenance_notes !== undefined) { updateFields.push('maintenance_notes = ?'); params.push(maintenance_notes); }
+    if (worker_photo !== undefined) { updateFields.push('worker_photo = ?'); params.push(worker_photo); }
+    
+    if (status === 'Resolved') {
+      updateFields.push('resolved_at = CURRENT_TIMESTAMP');
+    }
+
+    if (updateFields.length > 0) {
+      params.push(id);
+      await pool.query(`UPDATE faults SET ${updateFields.join(', ')} WHERE id = ?`, params);
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
