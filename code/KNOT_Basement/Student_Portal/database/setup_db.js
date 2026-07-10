@@ -4,7 +4,7 @@ const mysql = require('mysql2/promise');
 const dbConfig = {
   host: 'localhost',
   user: 'root',
-  password: 'new_password' // Default password is empty, change if needed
+  password: 'Chamu@280' // Default password is empty, change if needed
 };
 
 async function setupDatabase() {
@@ -52,7 +52,7 @@ async function setupDatabase() {
       );
     `);
 
-    // Create Bookings Table
+        // Create Bookings Table
     console.log("Creating Bookings table...");
     await connection.query(`
       CREATE TABLE IF NOT EXISTS bookings (
@@ -68,6 +68,36 @@ async function setupDatabase() {
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
       );
     `);
+
+    // Safety Alterations for coexisting schemas
+    console.log("Running schema compatibility alterations...");
+    try { await connection.query("ALTER TABLE users ADD COLUMN username VARCHAR(255) UNIQUE"); } catch(e){}
+    try { await connection.query("ALTER TABLE users ADD COLUMN password VARCHAR(255)"); } catch(e){}
+    try { await connection.query("ALTER TABLE users ADD COLUMN department VARCHAR(255)"); } catch(e){}
+    try { await connection.query("ALTER TABLE users ADD COLUMN email VARCHAR(255) UNIQUE"); } catch(e){}
+    try { await connection.query("ALTER TABLE users MODIFY COLUMN role VARCHAR(50)"); } catch(e){}
+
+    try { await connection.query("ALTER TABLE faults ADD COLUMN title VARCHAR(255)"); } catch(e){}
+    try { await connection.query("ALTER TABLE faults ADD COLUMN description TEXT"); } catch(e){}
+    try { await connection.query("ALTER TABLE faults ADD COLUMN priority VARCHAR(50) DEFAULT 'Medium'"); } catch(e){}
+    try { await connection.query("ALTER TABLE faults ADD COLUMN location TEXT"); } catch(e){}
+    try { await connection.query("ALTER TABLE faults ADD COLUMN status VARCHAR(50) DEFAULT 'Open'"); } catch(e){}
+    try { await connection.query("ALTER TABLE faults ADD COLUMN user_id INT"); } catch(e){}
+    try { await connection.query("ALTER TABLE faults ADD COLUMN icon VARCHAR(50) DEFAULT 'construction'"); } catch(e){}
+    try { await connection.query("ALTER TABLE faults ADD COLUMN photo_url LONGTEXT"); } catch(e){}
+    try { await connection.query("ALTER TABLE faults ADD COLUMN worker_photo LONGTEXT"); } catch(e){}
+    try { await connection.query("ALTER TABLE faults ADD COLUMN assigned_technician_id INT"); } catch(e){}
+    try { await connection.query("ALTER TABLE faults ADD COLUMN maintenance_notes TEXT"); } catch(e){}
+    try { await connection.query("ALTER TABLE faults ADD COLUMN admin_verified BOOLEAN DEFAULT FALSE"); } catch(e){}
+
+    try { await connection.query("ALTER TABLE bookings ADD COLUMN title VARCHAR(255)"); } catch(e){}
+    try { await connection.query("ALTER TABLE bookings ADD COLUMN time_display VARCHAR(255)"); } catch(e){}
+    try { await connection.query("ALTER TABLE bookings ADD COLUMN status VARCHAR(50) DEFAULT 'Pending'"); } catch(e){}
+    try { await connection.query("ALTER TABLE bookings ADD COLUMN icon VARCHAR(50)"); } catch(e){}
+    try { await connection.query("ALTER TABLE bookings ADD COLUMN user_id INT"); } catch(e){}
+    try { await connection.query("ALTER TABLE bookings ADD COLUMN assigned_lecturer VARCHAR(255)"); } catch(e){}
+    try { await connection.query("ALTER TABLE bookings ADD COLUMN purpose VARCHAR(255)"); } catch(e){}
+    try { await connection.query("ALTER TABLE bookings ADD COLUMN end_time DATETIME"); } catch(e){}
 
     // Create Rooms Table
     console.log("Creating Rooms table...");

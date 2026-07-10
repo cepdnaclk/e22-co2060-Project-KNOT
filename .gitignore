@@ -1,5 +1,25 @@
+# Node modules - never commit these
 node_modules/
+**/node_modules/
+
+# Log files
 *.log
-.DS_Store
+npm-debug.log*
+
+# Environment files with secrets
+*.env
+.env
+**/.env
+
+# Build outputs
 dist/
 build/
+.vite/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

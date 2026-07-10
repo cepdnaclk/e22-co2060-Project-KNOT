@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -13,16 +13,36 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-function LocationMarker({ position, setPosition }) {
+function LocationMarker({ position, setPosition, setLocation }) {
   useMapEvents({
-    click(e) {
+    async click(e) {
       setPosition(e.latlng);
+      try {
+        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${e.latlng.lat}&lon=${e.latlng.lng}`;
+        const res = await fetch(url, { headers: { 'User-Agent': 'KNOT-Maintenance-System' } });
+        const data = await res.json();
+        if (data && data.display_name) {
+          setLocation(data.display_name);
+        }
+      } catch (err) {
+        console.error("Reverse geocoding failed:", err);
+      }
     },
   });
 
   return position === null ? null : (
     <Marker position={position}></Marker>
   );
+}
+
+function MapController({ center }) {
+  const map = useMap();
+  useEffect(() => {
+    if (center) {
+      map.setView(center, 15);
+    }
+  }, [center, map]);
+  return null;
 }
 
 export default function ReportFault() {
@@ -32,11 +52,52 @@ export default function ReportFault() {
   const [location, setLocation] = useState('');
   const [mapPosition, setMapPosition] = useState(null);
   const [description, setDescription] = useState('');
+  const [photo, setPhoto] = useState(null);
   const [loading, setLoading] = useState(false);
+  
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchSuggestions, setSearchSuggestions] = useState([]);
+  const [searching, setSearching] = useState(false);
+
   const navigate = useNavigate();
 
   const userString = localStorage.getItem('knot_user');
   const user = userString ? JSON.parse(userString) : null;
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhoto(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSearchLocation = async () => {
+    if (!searchQuery.trim()) return;
+    setSearching(true);
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=5`;
+      const res = await fetch(url, { headers: { 'User-Agent': 'KNOT-Maintenance-System' } });
+      const data = await res.json();
+      setSearchSuggestions(data);
+    } catch (err) {
+      console.error("Geocoding search failed:", err);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const selectSuggestion = (suggestion) => {
+    const lat = parseFloat(suggestion.lat);
+    const lon = parseFloat(suggestion.lon);
+    setMapPosition({ lat, lng: lon });
+    setLocation(suggestion.display_name);
+    setSearchSuggestions([]);
+    setSearchQuery('');
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -57,7 +118,8 @@ export default function ReportFault() {
         priority,
         location: finalLocation,
         user_id: user.id,
-        icon: 'construction' // default
+        icon: 'construction', // default
+        photo_url: photo
       });
 
       setTimeout(() => {
@@ -118,6 +180,50 @@ export default function ReportFault() {
             </div>
 
             <div>
+              <div className="mb-4">
+                <label className="block text-sm font-semibold mb-1.5">Search Map Location</label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <input 
+                      type="text" 
+                      placeholder="Type a location... e.g. Peradeniya Engineering" 
+                      value={searchQuery} 
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => { if(e.key === 'Enter') { e.preventDefault(); handleSearchLocation(); } }}
+                      className="w-full border border-slate-200 rounded-xl py-3 pl-4 pr-10 text-sm placeholder:text-slate-400 text-slate-700 bg-slate-50 focus:bg-white focus:border-primary outline-none" 
+                    />
+                    {searchQuery && (
+                      <button type="button" onClick={() => setSearchQuery('')} className="absolute right-3 top-3 text-slate-400 hover:text-slate-600">
+                        <span className="material-symbols-outlined text-lg">close</span>
+                      </button>
+                    )}
+                  </div>
+                  <button 
+                    type="button" 
+                    onClick={handleSearchLocation}
+                    disabled={searching}
+                    className="bg-primary text-white px-5 rounded-xl text-sm font-bold flex items-center justify-center gap-1 hover:bg-primary/90 transition-colors shadow-md disabled:opacity-50"
+                  >
+                    {searching ? '...' : <span className="material-symbols-outlined">search</span>}
+                  </button>
+                </div>
+                
+                {searchSuggestions.length > 0 && (
+                  <div className="mt-2 border border-slate-200 rounded-xl bg-white shadow-lg max-h-48 overflow-y-auto z-10 relative">
+                    {searchSuggestions.map((suggestion, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => selectSuggestion(suggestion)}
+                        className="w-full text-left px-4 py-2.5 text-xs text-slate-700 hover:bg-slate-50 border-b border-slate-100 last:border-0 truncate block font-medium"
+                      >
+                        {suggestion.display_name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <label className="block text-sm font-semibold mb-1.5">Exact Location Details</label>
               <input type="text" placeholder="e.g., Near the main entrance, 3rd floor corridor" 
                 value={location} onChange={(e) => setLocation(e.target.value)}
@@ -131,13 +237,39 @@ export default function ReportFault() {
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                   />
-                  <LocationMarker position={mapPosition} setPosition={setMapPosition} />
+                  <LocationMarker position={mapPosition} setPosition={setMapPosition} setLocation={setLocation} />
+                  <MapController center={mapPosition} />
                 </MapContainer>
               </div>
               {mapPosition && (
                 <div className="flex items-center justify-between bg-primary/5 text-primary text-sm p-3 rounded-lg border border-primary/20">
                   <span className="font-semibold">Pin dropped: {mapPosition.lat.toFixed(4)}, {mapPosition.lng.toFixed(4)}</span>
                   <button type="button" onClick={() => setMapPosition(null)} className="text-xs hover:underline font-bold">Remove Pin</button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 space-y-4">
+            <h3 className="font-bold text-slate-800 mb-2 border-b border-slate-100 pb-2 flex items-center gap-2">
+              <span className="material-symbols-outlined text-slate-500">add_a_photo</span>
+              Attach a Photo (Optional)
+            </h3>
+            <p className="text-xs text-slate-500">Add an image to help the technician identify the issue more quickly.</p>
+            <div className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl p-6 bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer relative">
+              <input type="file" accept="image/*" onChange={handlePhotoChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+              {!photo ? (
+                <div className="flex flex-col items-center gap-2">
+                  <span className="material-symbols-outlined text-4xl text-slate-400">cloud_upload</span>
+                  <span className="text-sm font-semibold text-slate-600">Click or Drag photo here</span>
+                  <span className="text-xs text-slate-400">Supports PNG, JPG, GIF up to 5MB</span>
+                </div>
+              ) : (
+                <div className="relative w-full max-w-xs flex flex-col items-center gap-2">
+                  <img src={photo} alt="Attached Fault" className="w-full max-h-48 object-contain rounded-lg border border-slate-200 shadow-sm" />
+                  <button type="button" onClick={(e) => { e.stopPropagation(); setPhoto(null); }} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors shadow-md flex items-center justify-center">
+                    <span className="material-symbols-outlined text-sm font-bold">close</span>
+                  </button>
                 </div>
               )}
             </div>

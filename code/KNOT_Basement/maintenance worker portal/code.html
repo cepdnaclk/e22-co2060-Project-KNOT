@@ -1,126 +1,50 @@
 <!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+    <title>KNOT Operations - Worker Portal</title>
+    <!-- Google Fonts: Space Grotesk -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+    <!-- Material Symbols -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    
+    <!-- Leaflet CSS & JS CDNs -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<html class="light" lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
-<title>KNOT Operations - Maintenance Dashboard</title>
-<!-- Google Fonts: Space Grotesk for technical feel -->
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
-<!-- Material Symbols -->
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<script id="tailwind-config">
-      tailwind.config = {
-        darkMode: "class",
-        theme: {
-          extend: {
-            "colors": {
-                    "on-primary-fixed-variant": "#004884",
-                    "secondary-fixed-dim": "#b9c7df",
-                    "on-error": "#ffffff",
-                    "secondary": "#515f74",
-                    "error": "#ef4444",
-                    "slate-text": "#0f172a",
-                    "tertiary-container": "#af6100",
-                    "secondary-fixed": "#d5e3fc",
-                    "surface-container-lowest": "#ffffff",
-                    "surface-dim": "#d8dae1",
-                    "on-surface-variant": "#414752",
-                    "on-primary-fixed": "#001c39",
-                    "background-light": "#f6f7f8",
-                    "primary": "#005da8",
-                    "on-secondary-fixed": "#0d1c2e",
-                    "on-error-container": "#93000a",
-                    "surface-tint": "#005fac",
-                    "primary-fixed-dim": "#a4c9ff",
-                    "on-secondary": "#ffffff",
-                    "info": "#3b82f6",
-                    "primary-container": "#2276cb",
-                    "success": "#10b981",
-                    "tertiary-fixed": "#ffdcc1",
-                    "on-background": "#191c21",
-                    "on-surface": "#191c21",
-                    "inverse-primary": "#a4c9ff",
-                    "surface-container-low": "#f2f3fb",
-                    "outline": "#717783",
-                    "error-container": "#ffdad6",
-                    "background": "#f8f9ff",
-                    "on-secondary-fixed-variant": "#3a485b",
-                    "surface-variant": "#e0e2ea",
-                    "surface-container-highest": "#e0e2ea",
-                    "on-primary": "#ffffff",
-                    "on-primary-container": "#fdfcff",
-                    "secondary-container": "#d5e3fc",
-                    "surface-container": "#ecedf5",
-                    "on-tertiary-fixed-variant": "#6c3a00",
-                    "surface-container-high": "#e6e8ef",
-                    "tertiary-fixed-dim": "#ffb779",
-                    "inverse-on-surface": "#eff0f8",
-                    "on-tertiary-container": "#fffbff",
-                    "surface-bright": "#f8f9ff",
-                    "tertiary": "#8b4c00",
-                    "background-dark": "#121920",
-                    "surface": "#f8f9ff",
-                    "primary-fixed": "#d4e3ff",
-                    "inverse-surface": "#2d3036",
-                    "on-tertiary": "#ffffff",
-                    "outline-variant": "#c1c7d3",
-                    "on-secondary-container": "#57657a",
-                    "warning": "#f59e0b",
-                    "on-tertiary-fixed": "#2e1500"
-            },
-            "borderRadius": {
-                    "DEFAULT": "0.125rem",
-                    "lg": "0.25rem",
-                    "xl": "0.5rem",
-                    "full": "0.75rem"
-            },
-            "spacing": {
-                    "container-max": "1280px",
-                    "card-padding": "1.5rem",
-                    "section-gap": "2rem",
-                    "stack-sm": "0.5rem",
-                    "gutter": "1.5rem",
-                    "stack-md": "1rem"
-            },
-            "fontFamily": {
-                    "headline-md": ["Space Grotesk"],
-                    "display-lg": ["Space Grotesk"],
-                    "label-xs": ["Space Grotesk"],
-                    "body-sm": ["Space Grotesk"],
-                    "body-md": ["Space Grotesk"],
-                    "title-sm": ["Space Grotesk"]
-            },
-            "fontSize": {
-                    "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
-                    "display-lg": ["30px", {"lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
-                    "label-xs": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
-                    "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
-                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
-                    "title-sm": ["16px", {"lineHeight": "24px", "fontWeight": "600"}]
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2d7dd2",
+                        "secondary": "#34a853",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#121920",
+                        "success": "#10b981",
+                        "error": "#ef4444",
+                        "warning": "#f59e0b",
+                        "surface": "#ffffff",
+                        "surface-dark": "#1e293b",
+                        "surface-container": "#f1f5f9"
+                    },
+                    fontFamily: {
+                        display: ["Space Grotesk"]
+                    }
+                }
             }
-          },
-        },
-      }
+        }
     </script>
-<style>
+    <style>
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
         body {
             font-family: 'Space Grotesk', sans-serif;
             -webkit-tap-highlight-color: transparent;
-        }
-        .bento-grid {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 1rem;
-        }
-        @media (max-width: 768px) {
-            .bento-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
         }
         .live-pulse {
             position: relative;
@@ -136,196 +60,632 @@
             right: -4px;
             animation: pulse 2s infinite;
         }
+        .live-pulse-orange {
+            position: relative;
+        }
+        .live-pulse-orange::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #f59e0b;
+            border-radius: 50%;
+            top: 0;
+            right: -4px;
+            animation: pulse-orange 2s infinite;
+        }
         @keyframes pulse {
             0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
             70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
             100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
         }
+        @keyframes pulse-orange {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+        }
     </style>
-<style>
-    body {
-      min-height: max(884px, 100dvh);
-    }
-  </style>
-  </head>
-<body class="bg-background text-on-background min-h-screen pb-24">
-<!-- TopAppBar -->
-<header class="bg-surface w-full top-0 sticky z-40 border-b border-primary/10 shadow-sm">
-<div class="flex justify-between items-center px-4 py-3 w-full max-w-container-max mx-auto">
-<div class="flex items-center gap-3">
-<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20 bg-surface-container">
-<img class="w-full h-full object-cover" data-alt="Professional headshot of a maintenance worker in a navy blue branded uniform. The background is a clean, modern workshop with subtle bokeh. High-quality lighting highlights features, evoking a sense of reliability and technical expertise for the KNOT Operations platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCuD19szzEn9YItRipuOlXEMnRINir5ZVgh-18u6M2MxvW8Yd3GHOdoeY3dTFaBw2GygDvF57pPc2eGCim7xDU_qpWxkR3kairXM_FrsDcWilTHEpqDO7SnKI19y6nu5XxaclQgZO-4UBiq8kYXHgusgE6aFZUcWQ6-ExzZgUtD9J3QcIY_y4Gw0dc6HeQs4dqKshJOnBM59Ad8TdWD2OiYcNG5JBu9KjXU_PPTsbodfg79NEbF5bW3qYrLIVS7yzMPy3_ZhQCutEo"/>
-</div>
-<div>
-<h1 class="font-display-lg text-headline-md text-primary leading-tight">KNOT Operations</h1>
-</div>
-</div>
-<button class="p-2 rounded-full hover:bg-primary/5 transition-colors active:scale-95 duration-100 text-primary">
-<span class="material-symbols-outlined text-[28px]" data-icon="qr_code_scanner">qr_code_scanner</span>
-</button>
-</div>
-</header>
-<main class="max-w-container-max mx-auto px-4 py-6 flex flex-col gap-8">
-<!-- Welcome Header -->
-<section>
-<div class="flex flex-col">
-<p class="font-label-xs text-label-xs text-secondary uppercase tracking-widest mb-1">Worker ID: #KN-4092</p>
-<h2 class="font-display-lg text-display-lg text-on-background">Good Morning, Alex</h2>
-<div class="flex items-center gap-2 mt-2">
-<span class="live-pulse"></span>
-<span class="font-body-sm text-body-sm text-success font-medium ml-2">Shift Active • Building A-Sector 4</span>
-</div>
-</div>
-</section>
-<!-- Status Cards: Bento Layout -->
-<section class="bento-grid">
-<div class="col-span-2 md:col-span-2 bg-surface-container-lowest border border-primary/10 p-5 rounded-xl shadow-sm flex flex-col justify-between">
-<span class="material-symbols-outlined text-primary mb-2" data-icon="assignment">assignment</span>
-<div>
-<p class="font-label-xs text-label-xs text-secondary">Assigned Tasks</p>
-<p class="font-display-lg text-[32px] text-on-background">05</p>
-</div>
-</div>
-<div class="col-span-2 md:col-span-2 bg-error-container/20 border border-error/20 p-5 rounded-xl shadow-sm flex flex-col justify-between">
-<span class="material-symbols-outlined text-error mb-2" data-icon="priority_high">priority_high</span>
-<div>
-<p class="font-label-xs text-label-xs text-error">Urgent Tasks</p>
-<p class="font-display-lg text-[32px] text-error">02</p>
-</div>
-</div>
-<div class="col-span-2 md:col-span-2 bg-primary/5 border border-primary/10 p-5 rounded-xl shadow-sm flex flex-col justify-between">
-<span class="material-symbols-outlined text-primary mb-2" data-icon="timer">timer</span>
-<div>
-<p class="font-label-xs text-label-xs text-secondary">Shift Ends In</p>
-<p class="font-display-lg text-[32px] text-on-background">4h 20m</p>
-</div>
-</div>
-</section>
-<!-- Today's Agenda -->
-<section class="flex flex-col gap-4">
-<div class="flex justify-between items-end">
-<h3 class="font-headline-md text-headline-md text-on-background">Today's Agenda</h3>
-<button class="font-label-xs text-label-xs text-primary hover:underline">View Schedule</button>
-</div>
-<div class="flex flex-col gap-3">
-<!-- Task 1 -->
-<div class="bg-surface border border-primary/10 rounded-xl p-4 flex gap-4 items-center hover:bg-primary/5 transition-colors cursor-pointer">
-<div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center text-primary flex-shrink-0">
-<span class="material-symbols-outlined" data-icon="ac_unit">ac_unit</span>
-</div>
-<div class="flex-grow">
-<div class="flex justify-between items-start">
-<h4 class="font-title-sm text-title-sm text-on-background">EOE Hall - AC Repair</h4>
-<span class="bg-error/10 text-error text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter">High Priority</span>
-</div>
-<div class="flex items-center gap-3 mt-1 text-secondary">
-<div class="flex items-center gap-1">
-<span class="material-symbols-outlined text-[16px]" data-icon="schedule">schedule</span>
-<span class="font-body-sm text-body-sm">09:00 - 10:30</span>
-</div>
-<div class="flex items-center gap-1">
-<span class="material-symbols-outlined text-[16px]" data-icon="location_on">location_on</span>
-<span class="font-body-sm text-body-sm">Floor 2, Room 204</span>
-</div>
-</div>
-</div>
-<span class="material-symbols-outlined text-secondary/40" data-icon="chevron_right">chevron_right</span>
-</div>
-<!-- Task 2 -->
-<div class="bg-surface border border-primary/10 rounded-xl p-4 flex gap-4 items-center hover:bg-primary/5 transition-colors cursor-pointer">
-<div class="w-12 h-12 bg-secondary-container/50 rounded-lg flex items-center justify-center text-secondary flex-shrink-0">
-<span class="material-symbols-outlined" data-icon="settings_ethernet">settings_ethernet</span>
-</div>
-<div class="flex-grow">
-<div class="flex justify-between items-start">
-<h4 class="font-title-sm text-title-sm text-on-background">Lab 402 - Network Port</h4>
-<span class="bg-warning/10 text-warning text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter">Medium Priority</span>
-</div>
-<div class="flex items-center gap-3 mt-1 text-secondary">
-<div class="flex items-center gap-1">
-<span class="material-symbols-outlined text-[16px]" data-icon="schedule">schedule</span>
-<span class="font-body-sm text-body-sm">11:00 - 12:00</span>
-</div>
-<div class="flex items-center gap-1">
-<span class="material-symbols-outlined text-[16px]" data-icon="location_on">location_on</span>
-<span class="font-body-sm text-body-sm">East Wing</span>
-</div>
-</div>
-</div>
-<span class="material-symbols-outlined text-secondary/40" data-icon="chevron_right">chevron_right</span>
-</div>
-</div>
-</section>
-<!-- Quick Actions -->
-<section class="flex flex-col gap-4">
-<h3 class="font-headline-md text-headline-md text-on-background">Quick Actions</h3>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-<button class="flex items-center justify-center gap-4 bg-primary text-on-primary py-5 px-6 rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all w-full text-left">
-<span class="material-symbols-outlined text-[32px]" data-icon="qr_code_scanner">qr_code_scanner</span>
-<span class="font-title-sm text-title-sm">Scan Equipment</span>
-</button>
-<button class="flex items-center justify-center gap-4 bg-surface-container-high text-on-surface py-5 px-6 rounded-xl border border-primary/10 shadow-sm hover:bg-primary/5 active:scale-95 transition-all w-full">
-<span class="material-symbols-outlined text-[32px] text-primary" data-icon="inventory_2">inventory_2</span>
-<span class="font-title-sm text-title-sm">Update Inventory</span>
-</button>
-<button class="flex items-center justify-center gap-4 bg-surface-container-high text-on-surface py-5 px-6 rounded-xl border border-primary/10 shadow-sm hover:bg-primary/5 active:scale-95 transition-all w-full">
-<span class="material-symbols-outlined text-[32px] text-secondary" data-icon="coffee">coffee</span>
-<span class="font-title-sm text-title-sm">Log Break</span>
-</button>
-</div>
-</section>
-<!-- Informational Status -->
-<section class="mb-8">
-<div class="bg-primary/5 border border-primary/20 rounded-xl p-6 relative overflow-hidden">
-<div class="relative z-10">
-<h4 class="font-title-sm text-title-sm text-primary mb-2 flex items-center gap-2">
-<span class="material-symbols-outlined text-[20px]" data-icon="info">info</span>
-                        Fleet Health Status
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen">
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen" class="hidden min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-slate-900 to-slate-800">
+        <div class="w-full max-w-md bg-white rounded-3xl shadow-xl p-8 border border-slate-700/10">
+            <div class="flex flex-col items-center mb-8">
+                <div class="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mb-4">
+                    <span class="material-symbols-outlined text-4xl text-primary">construction</span>
+                </div>
+                <h1 class="text-2xl font-bold text-slate-900">KNOT Operations</h1>
+                <p class="text-sm text-slate-500 mt-1">Maintenance Worker Portal</p>
+            </div>
+            
+            <form id="login-form" class="space-y-5">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Username</label>
+                    <input type="text" id="username" required placeholder="e.g. alex" 
+                        class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-primary focus:ring-primary/20 outline-none transition-all" />
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Password</label>
+                    <input type="password" id="password" required placeholder="••••••••" 
+                        class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-primary focus:ring-primary/20 outline-none transition-all" />
+                </div>
+                
+                <div id="login-error" class="hidden text-xs text-red-500 font-semibold bg-red-50 border border-red-100 p-3 rounded-lg">
+                    Invalid credentials. Please try again.
+                </div>
+
+                <button type="submit" class="w-full bg-primary hover:bg-primary/95 text-white py-3.5 rounded-xl font-bold text-base transition-colors shadow-lg shadow-primary/25 active:scale-[0.98]">
+                    Sign In
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- APP SCREEN -->
+    <div id="app-screen" class="hidden min-h-screen pb-24">
+        <!-- Top App Bar -->
+        <header class="bg-slate-900 w-full top-0 sticky z-40 border-b border-slate-800 shadow-md text-white">
+            <div class="flex justify-between items-center px-4 py-3 max-w-4xl mx-auto">
+                <div class="flex items-center gap-3">
+                    <div class="bg-primary/20 w-10 h-10 rounded-full flex items-center justify-center">
+                        <span class="material-symbols-outlined text-primary text-xl">construction</span>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg leading-tight">KNOT Operations</h1>
+                        <p class="text-[10px] text-slate-400">Worker Dashboard</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button id="logout-btn" class="p-2 text-slate-300 hover:text-white transition-colors flex items-center justify-center">
+                        <span class="material-symbols-outlined text-xl">logout</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-4xl mx-auto px-4 py-6 flex flex-col gap-6">
+            <!-- Welcome Header -->
+            <section class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <p id="worker-id" class="text-xs text-slate-400 font-bold uppercase tracking-wider">Worker ID: #KN-0000</p>
+                    <h2 id="welcome-name" class="text-2xl font-bold text-slate-900 mt-0.5">Good Morning</h2>
+                    <div class="flex items-center gap-2 mt-2">
+                        <span id="pulse-indicator" class="live-pulse"></span>
+                        <span id="shift-status-text" class="text-xs text-success font-semibold ml-2">Shift Active • Ready for Tasks</span>
+                    </div>
+                </div>
+                <button id="break-btn" class="px-5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 font-bold text-sm text-slate-700 transition-colors flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm">coffee</span>
+                    <span id="break-btn-text">Log Break</span>
+                </button>
+            </section>
+
+            <!-- Status Cards Bento Layout -->
+            <section class="grid grid-cols-3 gap-4">
+                <div class="bg-white border border-slate-100 p-5 rounded-2xl shadow-sm flex flex-col justify-between">
+                    <span class="material-symbols-outlined text-primary mb-2 text-2xl">assignment</span>
+                    <div>
+                        <p class="text-xs text-slate-400 font-semibold">Assigned</p>
+                        <p id="assigned-count" class="text-3xl font-bold text-slate-900">0</p>
+                    </div>
+                </div>
+                <div class="bg-red-50/50 border border-red-100 p-5 rounded-2xl shadow-sm flex flex-col justify-between">
+                    <span class="material-symbols-outlined text-red-500 mb-2 text-2xl">priority_high</span>
+                    <div>
+                        <p class="text-xs text-red-500 font-semibold">Urgent</p>
+                        <p id="urgent-count" class="text-3xl font-bold text-red-600">0</p>
+                    </div>
+                </div>
+                <div class="bg-green-50/50 border border-green-100 p-5 rounded-2xl shadow-sm flex flex-col justify-between">
+                    <span class="material-symbols-outlined text-green-500 mb-2 text-2xl">task_alt</span>
+                    <div>
+                        <p class="text-xs text-green-500 font-semibold">Resolved</p>
+                        <p id="resolved-count" class="text-3xl font-bold text-green-600">0</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Today's Agenda -->
+            <section class="flex flex-col gap-4">
+                <div class="flex justify-between items-end">
+                    <h3 class="text-lg font-bold text-slate-900">My Assigned Tasks</h3>
+                    <button onclick="window.location.reload()" class="text-xs font-bold text-primary hover:underline flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm">refresh</span> Refresh
+                    </button>
+                </div>
+                
+                <div id="tasks-list" class="flex flex-col gap-3">
+                    <!-- Dynamic tasks will be loaded here -->
+                    <div class="bg-white border border-slate-100 rounded-2xl p-6 text-center text-slate-400">
+                        Loading assigned tasks...
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- TASK DETAILS MODAL -->
+    <div id="task-modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="w-full max-w-xl bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
+            <div class="bg-slate-900 text-white p-5 flex justify-between items-center border-b border-slate-800">
+                <div>
+                    <span id="modal-ticket-id" class="text-xs text-primary font-bold uppercase tracking-wider">TKT-0000</span>
+                    <h3 id="modal-ticket-title" class="text-lg font-bold">Task Details</h3>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white p-1 rounded-full transition-colors flex items-center justify-center">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto flex-1 space-y-6">
+                <!-- Info Grid -->
+                <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <div>
+                        <span class="text-[10px] text-slate-400 font-bold uppercase">Location</span>
+                        <p id="modal-location" class="text-sm font-semibold text-slate-700 mt-0.5">N/A</p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-400 font-bold uppercase">Reported By</span>
+                        <p id="modal-reporter" class="text-sm font-semibold text-slate-700 mt-0.5">N/A</p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-400 font-bold uppercase">Priority</span>
+                        <div id="modal-priority-badge" class="mt-1"></div>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-400 font-bold uppercase">Status</span>
+                        <div id="modal-status-badge" class="mt-1"></div>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <span class="text-xs text-slate-400 font-bold uppercase">Issue Description</span>
+                    <p id="modal-description" class="text-sm text-slate-600 mt-1 whitespace-pre-wrap leading-relaxed"></p>
+                </div>
+
+                <!-- Location Map -->
+                <div id="modal-map-container" class="hidden">
+                    <span class="text-xs text-slate-400 font-bold uppercase block mb-2">Location Map</span>
+                    <div id="modal-map" class="h-48 w-full rounded-2xl border border-slate-200 shadow-sm relative z-0"></div>
+                </div>
+
+                <!-- Reporter Attached Photo -->
+                <div id="modal-reporter-photo-container" class="hidden">
+                    <span class="text-xs text-slate-400 font-bold uppercase block mb-2">Reporter Photo</span>
+                    <img id="modal-reporter-photo" src="" alt="Reporter Attachment" class="w-full max-h-52 object-contain rounded-xl border border-slate-100 bg-slate-50 shadow-sm" />
+                </div>
+
+                <!-- RESOLUTION FORM -->
+                <form id="resolution-form" class="space-y-4 border-t border-slate-100 pt-6">
+                    <h4 class="font-bold text-slate-900 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">done_all</span>
+                        Update Progress & Resolution
                     </h4>
-<p class="font-body-md text-body-md text-on-surface-variant max-w-md">94% of operational equipment in Building A is performing within normal parameters. 3 maintenance cycles due this week.</p>
-</div>
-<!-- Background decoration element -->
-<div class="absolute -right-10 -bottom-10 opacity-5">
-<span class="material-symbols-outlined text-[200px]" data-icon="construction">construction</span>
-</div>
-</div>
-</section>
-</main>
-<!-- BottomNavBar -->
-<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 py-3 pb-safe bg-surface border-t border-primary/10 shadow-sm">
-<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 active:scale-90 transition-transform" href="#">
-<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
-<span class="font-label-xs text-label-xs">Dashboard</span>
-</a>
-<a class="flex flex-col items-center justify-center text-secondary hover:bg-secondary-container/50 px-4 py-1 rounded-full active:scale-90 transition-transform" href="#">
-<span class="material-symbols-outlined" data-icon="assignment_turned_in">assignment_turned_in</span>
-<span class="font-label-xs text-label-xs">My Tasks</span>
-</a>
-<a class="flex flex-col items-center justify-center text-secondary hover:bg-secondary-container/50 px-4 py-1 rounded-full active:scale-90 transition-transform" href="#">
-<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
-<span class="font-label-xs text-label-xs">Inventory</span>
-</a>
-<a class="flex flex-col items-center justify-center text-secondary hover:bg-secondary-container/50 px-4 py-1 rounded-full active:scale-90 transition-transform" href="#">
-<span class="material-symbols-outlined" data-icon="person">person</span>
-<span class="font-label-xs text-label-xs">Profile</span>
-</a>
-</nav>
-<script>
-        // Micro-interaction for feedback
-        document.querySelectorAll('button, a').forEach(el => {
-            el.addEventListener('click', () => {
-                // Subtle haptic-like feedback logic would go here
-            });
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Action Status</label>
+                        <select id="action-status" required class="w-full border border-slate-200 bg-slate-50 rounded-xl py-3 px-4 text-sm text-slate-700 font-medium focus:bg-white transition-colors">
+                            <option value="In Progress">In Progress</option>
+                            <option value="Resolved">Resolved (Completed)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Maintenance Notes</label>
+                        <textarea id="maintenance-notes" placeholder="Describe the work performed or parts replaced..." 
+                            class="w-full border border-slate-200 bg-slate-50 rounded-xl py-3 px-4 h-24 resize-none text-sm text-slate-700 focus:bg-white transition-colors"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Attach Completion Photo (Required to Resolve)</label>
+                        <div class="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl p-5 bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer relative min-h-[140px]">
+                            <input type="file" id="worker-photo-input" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                            <div id="photo-upload-placeholder" class="flex flex-col items-center gap-1.5">
+                                <span class="material-symbols-outlined text-3xl text-slate-400">add_a_photo</span>
+                                <span class="text-xs font-semibold text-slate-600">Upload completion photo</span>
+                                <span class="text-[10px] text-slate-400">PNG, JPG up to 5MB</span>
+                            </div>
+                            <div id="photo-preview-container" class="hidden relative w-full max-w-xs flex flex-col items-center">
+                                <img id="photo-preview" src="" alt="Completion preview" class="max-h-36 object-contain rounded-lg border border-slate-200 shadow-sm" />
+                                <button type="button" id="remove-photo-btn" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors shadow-md flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-xs">close</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="submit-resolution-btn" class="w-full bg-primary hover:bg-primary/95 text-white py-3.5 rounded-xl font-bold text-base transition-colors shadow-lg shadow-primary/25 active:scale-[0.98]">
+                        Save Update
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation Bar (Visual only for consistency) -->
+    <nav class="fixed bottom-0 left-0 w-full z-45 flex justify-around items-center px-2 py-3 bg-white border-t border-slate-100 shadow-lg">
+        <a class="flex flex-col items-center justify-center text-primary rounded-full px-4 py-1 active:scale-95 transition-transform" href="#" onclick="window.location.reload()">
+            <span class="material-symbols-outlined">dashboard</span>
+            <span class="text-[10px] font-bold">Dashboard</span>
+        </a>
+        <a class="flex flex-col items-center justify-center text-slate-400 hover:text-primary px-4 py-1 rounded-full active:scale-95 transition-transform" href="#" onclick="alert('Filtered view ready in next release.')">
+            <span class="material-symbols-outlined">assignment_turned_in</span>
+            <span class="text-[10px] font-semibold">My Tasks</span>
+        </a>
+        <a class="flex flex-col items-center justify-center text-slate-400 hover:text-primary px-4 py-1 rounded-full active:scale-95 transition-transform" href="#" onclick="alert('Inventory management synced with Facilities Database.')">
+            <span class="material-symbols-outlined">inventory_2</span>
+            <span class="text-[10px] font-semibold">Inventory</span>
+        </a>
+    </nav>
+
+    <!-- JS LOGIC -->
+    <script>
+        const API_BASE = 'http://localhost:5003/api';
+        let currentUser = null;
+        let ticketsList = [];
+        let activeTicket = null;
+        let workerPhotoBase64 = null;
+        let isBreak = false;
+        let modalMap = null;
+
+        // Check Auth on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const userString = localStorage.getItem('knot_worker_user');
+            if (userString) {
+                currentUser = JSON.parse(userString);
+                showApp();
+            } else {
+                showLogin();
+            }
         });
 
-        // Simulating some "live" data changes
-        setInterval(() => {
-            const timeEl = document.querySelector('.bento-grid div:last-child p:last-child');
-            if (timeEl) {
-                // Just a visual flicker to simulate "live" data updates
-                timeEl.style.opacity = '0.7';
-                setTimeout(() => timeEl.style.opacity = '1', 100);
+        function showLogin() {
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('app-screen').classList.add('hidden');
+        }
+
+        function showApp() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('app-screen').classList.remove('hidden');
+            
+            // Set User Details
+            document.getElementById('worker-id').innerText = `Worker ID: #KN-${currentUser.id || '4092'}`;
+            document.getElementById('welcome-name').innerText = `Good Morning, ${currentUser.name || 'Alex'}`;
+            
+            // Fetch tickets
+            loadTickets();
+        }
+
+        // Login Submit
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const usernameInput = document.getElementById('username').value;
+            const passwordInput = document.getElementById('password').value;
+            const errorDiv = document.getElementById('login-error');
+            
+            errorDiv.classList.add('hidden');
+
+            try {
+                const res = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: usernameInput, password: passwordInput })
+                });
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    currentUser = {
+                        id: data.id,
+                        name: data.name,
+                        token: data.token,
+                        role: data.role
+                    };
+                    localStorage.setItem('knot_worker_user', JSON.stringify(currentUser));
+                    showApp();
+                } else {
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error(err);
+                errorDiv.innerText = "Connection failed. Please ensure the backend is running.";
+                errorDiv.classList.remove('hidden');
             }
-        }, 15000);
+        });
+
+        // Logout
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            localStorage.removeItem('knot_worker_user');
+            currentUser = null;
+            showLogin();
+        });
+
+        // Toggle Break
+        document.getElementById('break-btn').addEventListener('click', () => {
+            isBreak = !isBreak;
+            const pulse = document.getElementById('pulse-indicator');
+            const statusText = document.getElementById('shift-status-text');
+            const btnText = document.getElementById('break-btn-text');
+            
+            if (isBreak) {
+                pulse.className = 'live-pulse-orange';
+                statusText.innerText = 'On Break • Building A-Sector 4';
+                statusText.className = 'text-xs text-warning font-semibold ml-2';
+                btnText.innerText = 'Resume Work';
+            } else {
+                pulse.className = 'live-pulse';
+                statusText.innerText = 'Shift Active • Ready for Tasks';
+                statusText.className = 'text-xs text-success font-semibold ml-2';
+                btnText.innerText = 'Log Break';
+            }
+        });
+
+        // Load Assigned Tickets
+        async function loadTickets() {
+            const listContainer = document.getElementById('tasks-list');
+            try {
+                const res = await fetch(`${API_BASE}/technician/tickets/${currentUser.id}`);
+                if (!res.ok) throw new Error("Failed to fetch tickets");
+                
+                ticketsList = await res.json();
+                renderDashboard();
+            } catch (err) {
+                console.error(err);
+                listContainer.innerHTML = `
+                    <div class="bg-red-50 border border-red-100 rounded-2xl p-6 text-center text-red-600 font-semibold">
+                        Failed to fetch tasks. Ensure backend is running.
+                    </div>
+                `;
+            }
+        }
+
+        function renderDashboard() {
+            const listContainer = document.getElementById('tasks-list');
+            
+            // Statistics
+            const assignedCount = ticketsList.filter(t => t.status !== 'Resolved').length;
+            const urgentCount = ticketsList.filter(t => t.status !== 'Resolved' && t.priority === 'High').length;
+            const resolvedCount = ticketsList.filter(t => t.status === 'Resolved').length;
+            
+            document.getElementById('assigned-count').innerText = String(assignedCount).padStart(2, '0');
+            document.getElementById('urgent-count').innerText = String(urgentCount).padStart(2, '0');
+            document.getElementById('resolved-count').innerText = String(resolvedCount).padStart(2, '0');
+
+            if (ticketsList.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="bg-white border border-slate-100 rounded-2xl p-8 text-center text-slate-400 font-medium">
+                        No tasks currently assigned to you.
+                    </div>
+                `;
+                return;
+            }
+
+            listContainer.innerHTML = '';
+            ticketsList.forEach(ticket => {
+                const isResolved = ticket.status === 'Resolved';
+                
+                // Priority color
+                let prioClass = 'bg-slate-100 text-slate-500';
+                if (ticket.priority === 'High') prioClass = 'bg-red-100 text-red-600';
+                else if (ticket.priority === 'Medium') prioClass = 'bg-amber-100 text-amber-600';
+                
+                // Icon representation
+                let icon = 'construction';
+                if (ticket.title.toLowerCase().includes('ac') || ticket.title.toLowerCase().includes('hvac')) icon = 'ac_unit';
+                else if (ticket.title.toLowerCase().includes('network') || ticket.title.toLowerCase().includes('port')) icon = 'settings_ethernet';
+                else if (ticket.title.toLowerCase().includes('light') || ticket.title.toLowerCase().includes('power')) icon = 'bolt';
+
+                listContainer.innerHTML += `
+                    <div onclick="openTicketDetails(${ticket.id})" class="bg-white border border-slate-100 rounded-2xl p-4 flex gap-4 items-center hover:bg-slate-50 transition-all cursor-pointer shadow-sm relative group">
+                        <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary flex-shrink-0">
+                            <span class="material-symbols-outlined">${icon}</span>
+                        </div>
+                        <div class="flex-grow min-w-0">
+                            <div class="flex justify-between items-start gap-2">
+                                <h4 class="font-bold text-slate-900 truncate">${ticket.title}</h4>
+                                <div class="flex gap-1.5 flex-shrink-0">
+                                    <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider ${prioClass}">
+                                        ${ticket.priority}
+                                    </span>
+                                    <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider ${isResolved ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}">
+                                        ${ticket.status}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-3 mt-1.5 text-slate-400 text-xs font-medium">
+                                <div class="flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[14px]">location_on</span>
+                                    <span class="truncate max-w-[180px]">${ticket.location}</span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[14px]">tag</span>
+                                    <span>${ticket.ticket_number}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors">chevron_right</span>
+                    </div>
+                `;
+            });
+        }
+
+        // Open details modal
+        function openTicketDetails(id) {
+            activeTicket = ticketsList.find(t => t.id === id);
+            if (!activeTicket) return;
+
+            document.getElementById('modal-ticket-id').innerText = activeTicket.ticket_number;
+            document.getElementById('modal-ticket-title').innerText = activeTicket.title;
+            document.getElementById('modal-location').innerText = activeTicket.location;
+            document.getElementById('modal-reporter').innerText = activeTicket.reported_by;
+            document.getElementById('modal-description').innerText = activeTicket.description;
+
+            // Priority Badge
+            let prioClass = 'bg-slate-100 text-slate-500';
+            if (activeTicket.priority === 'High') prioClass = 'bg-red-100 text-red-600';
+            else if (activeTicket.priority === 'Medium') prioClass = 'bg-amber-100 text-amber-600';
+            document.getElementById('modal-priority-badge').innerHTML = `
+                <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase ${prioClass}">
+                    ${activeTicket.priority}
+                </span>
+            `;
+
+            // Status Badge
+            const isResolved = activeTicket.status === 'Resolved';
+            document.getElementById('modal-status-badge').innerHTML = `
+                <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase ${isResolved ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}">
+                    ${activeTicket.status}
+                </span>
+            `;
+
+            // Map Container Setup
+            const mapContainer = document.getElementById('modal-map-container');
+            let coords = [7.2584, 80.5968]; // Default: Faculty of Engineering, Peradeniya
+            let hasCoords = false;
+
+            if (activeTicket.location) {
+                const match = activeTicket.location.match(/Map Coordinates:\s*([-\d.]+),\s*([-\d.]+)/);
+                if (match) {
+                    coords = [parseFloat(match[1]), parseFloat(match[2])];
+                    hasCoords = true;
+                }
+            }
+
+            mapContainer.classList.remove('hidden');
+
+            // Render Leaflet Map dynamically
+            setTimeout(() => {
+                if (modalMap) {
+                    modalMap.remove();
+                    modalMap = null;
+                }
+
+                modalMap = L.map('modal-map').setView(coords, 16);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors'
+                }).addTo(modalMap);
+
+                const marker = L.marker(coords).addTo(modalMap);
+                if (hasCoords) {
+                    marker.bindPopup("<b>Reported Location Pin</b>").openPopup();
+                } else {
+                    marker.bindPopup("<b>Peradeniya Engineering (Default Location)</b>").openPopup();
+                }
+            }, 150);
+
+            // Reporter Photo
+            const photoContainer = document.getElementById('modal-reporter-photo-container');
+            const photoImg = document.getElementById('modal-reporter-photo');
+            if (activeTicket.photo_url) {
+                photoImg.src = activeTicket.photo_url;
+                photoContainer.classList.remove('hidden');
+            } else {
+                photoContainer.classList.add('hidden');
+                photoImg.src = '';
+            }
+
+            // Fill Form Fields
+            document.getElementById('action-status').value = activeTicket.status;
+            document.getElementById('maintenance-notes').value = activeTicket.maintenance_notes || '';
+            
+            // Completion Photo Preview resetting
+            workerPhotoBase64 = activeTicket.worker_photo || null;
+            const previewContainer = document.getElementById('photo-preview-container');
+            const uploadPlaceholder = document.getElementById('photo-upload-placeholder');
+            const previewImg = document.getElementById('photo-preview');
+            
+            if (workerPhotoBase64) {
+                previewImg.src = workerPhotoBase64;
+                previewContainer.classList.remove('hidden');
+                uploadPlaceholder.classList.add('hidden');
+            } else {
+                previewContainer.classList.add('hidden');
+                uploadPlaceholder.classList.remove('hidden');
+                previewImg.src = '';
+            }
+
+            // Show Modal
+            document.getElementById('task-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('task-modal').classList.add('hidden');
+            activeTicket = null;
+            workerPhotoBase64 = null;
+            if (modalMap) {
+                modalMap.remove();
+                modalMap = null;
+            }
+        }
+
+        // Photo file selection & Base64 parsing
+        document.getElementById('worker-photo-input').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    workerPhotoBase64 = reader.result;
+                    
+                    document.getElementById('photo-preview').src = workerPhotoBase64;
+                    document.getElementById('photo-preview-container').classList.remove('hidden');
+                    document.getElementById('photo-upload-placeholder').classList.add('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Remove photo click handler
+        document.getElementById('remove-photo-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            workerPhotoBase64 = null;
+            document.getElementById('worker-photo-input').value = '';
+            document.getElementById('photo-preview').src = '';
+            document.getElementById('photo-preview-container').classList.add('hidden');
+            document.getElementById('photo-upload-placeholder').classList.remove('hidden');
+        });
+
+        // Submit Form
+        document.getElementById('resolution-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const statusVal = document.getElementById('action-status').value;
+            const notesVal = document.getElementById('maintenance-notes').value;
+
+            // Enforce resolution photo if resolving
+            if (statusVal === 'Resolved' && !workerPhotoBase64) {
+                alert('Please upload a completion photo of the resolved work to verify the completion.');
+                return;
+            }
+
+            const btn = document.getElementById('submit-resolution-btn');
+            btn.innerText = 'Saving...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`${API_BASE}/technician/tickets/${activeTicket.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        status: statusVal,
+                        maintenance_notes: notesVal,
+                        worker_photo: workerPhotoBase64
+                    })
+                });
+
+                if (res.ok) {
+                    closeModal();
+                    loadTickets();
+                } else {
+                    alert('Failed to update task.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Connection error occurred.');
+            } finally {
+                btn.innerText = 'Save Update';
+                btn.disabled = false;
+            }
+        });
     </script>
-</body></html>
+</body>
+</html>
