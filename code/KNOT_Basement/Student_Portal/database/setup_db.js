@@ -31,7 +31,6 @@ async function setupDatabase() {
       );
     `);
 
-    
     // Create Faults Table
     console.log("Creating Faults table...");
     await connection.query(`
@@ -39,7 +38,7 @@ async function setupDatabase() {
         id INT AUTO_INCREMENT PRIMARY KEY,
         title VARCHAR(255) NOT NULL,
         description TEXT,
-        location VARCHAR(255),
+        location TEXT,
         status VARCHAR(50) DEFAULT 'In Progress',
         priority VARCHAR(50) DEFAULT 'Medium',
         icon VARCHAR(50) DEFAULT 'construction',
@@ -65,9 +64,21 @@ async function setupDatabase() {
         assigned_lecturer VARCHAR(255),
         purpose TEXT,
         end_time VARCHAR(255),
+        booking_type VARCHAR(50) DEFAULT 'AR Office',
+        rejection_reason TEXT,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
       );
     `);
+
+    // Create Settings Table
+    console.log("Creating Settings table...");
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS settings (
+        setting_key VARCHAR(50) PRIMARY KEY,
+        setting_value VARCHAR(255) NOT NULL
+      );
+    `);
+    await connection.query(`INSERT IGNORE INTO settings (setting_key, setting_value) VALUES ('auto_booking', 'true')`);
 
     // Safety Alterations for coexisting schemas
     console.log("Running schema compatibility alterations...");
@@ -80,7 +91,7 @@ async function setupDatabase() {
     try { await connection.query("ALTER TABLE faults ADD COLUMN title VARCHAR(255)"); } catch(e){}
     try { await connection.query("ALTER TABLE faults ADD COLUMN description TEXT"); } catch(e){}
     try { await connection.query("ALTER TABLE faults ADD COLUMN priority VARCHAR(50) DEFAULT 'Medium'"); } catch(e){}
-    try { await connection.query("ALTER TABLE faults ADD COLUMN location TEXT"); } catch(e){}
+    try { await connection.query("ALTER TABLE faults MODIFY COLUMN location TEXT"); } catch(e){}
     try { await connection.query("ALTER TABLE faults ADD COLUMN status VARCHAR(50) DEFAULT 'Open'"); } catch(e){}
     try { await connection.query("ALTER TABLE faults ADD COLUMN user_id INT"); } catch(e){}
     try { await connection.query("ALTER TABLE faults ADD COLUMN icon VARCHAR(50) DEFAULT 'construction'"); } catch(e){}
@@ -98,6 +109,7 @@ async function setupDatabase() {
     try { await connection.query("ALTER TABLE bookings ADD COLUMN assigned_lecturer VARCHAR(255)"); } catch(e){}
     try { await connection.query("ALTER TABLE bookings ADD COLUMN purpose VARCHAR(255)"); } catch(e){}
     try { await connection.query("ALTER TABLE bookings ADD COLUMN end_time DATETIME"); } catch(e){}
+    try { await connection.query("ALTER TABLE bookings ADD COLUMN booking_type VARCHAR(50) DEFAULT 'AR Office'"); } catch(e){}
 
     // Create Rooms Table
     console.log("Creating Rooms table...");
@@ -132,8 +144,8 @@ async function setupDatabase() {
       // Seed mock bookings
       await connection.query(`
         INSERT INTO bookings (title, time_display, status, icon, user_id, assigned_lecturer, purpose) VALUES 
-        ('EOE - Main Lab', 'Tomorrow, 10:00 AM', 'Approved', 'science', ?, NULL, 'General Study'),
-        ('DO1 - Seminar Hall', 'Friday, 02:30 PM', 'Pending', 'corporate_fare', ?, 'Dr. Smith', 'Group Discussion')
+        ('EOE Hall - Engineering South', 'Tomorrow, 10:00 AM', 'Approved', 'science', ?, NULL, 'General Study'),
+        ('DO1 - Drawing Office 1', 'Friday, 02:30 PM', 'Pending', 'corporate_fare', ?, 'Dr. Smith', 'Group Discussion')
       `, [userId, userId]);
     }
 
@@ -142,10 +154,16 @@ async function setupDatabase() {
     if (roomRows.length === 0) {
       await connection.query(`
         INSERT INTO rooms (name, capacity, type, status) VALUES 
-        ('EOE - Main Lab', 40, 'Lab', 'Available'),
-        ('DO1 - Seminar Hall', 100, 'Seminar Hall', 'Available'),
-        ('DO2 - Lecture Hall', 60, 'Lecture Hall', 'Available'),
-        ('DO3 - Lecture Hall', 60, 'Lecture Hall', 'Maintenance')
+        ('EOE Hall - Engineering South', 120, 'Lecture Hall', 'Available'),
+        ('DO1 - Drawing Office 1', 40, 'Drawing Office', 'Available'),
+        ('DO2 - Drawing Office 2', 40, 'Drawing Office', 'Available'),
+        ('LH01 - Lecture Hall 01', 80, 'Lecture Hall', 'Available'),
+        ('LH02 - Lecture Hall 02', 80, 'Lecture Hall', 'Available'),
+        ('Seminar Room A', 50, 'Seminar Room', 'Available'),
+        ('Seminar Room B', 50, 'Seminar Room', 'Available'),
+        ('Computer Lab 01', 60, 'Lab', 'Available'),
+        ('Computer Lab 02', 60, 'Lab', 'Available'),
+        ('Electronics Lab', 45, 'Lab', 'Available')
       `);
     }
 

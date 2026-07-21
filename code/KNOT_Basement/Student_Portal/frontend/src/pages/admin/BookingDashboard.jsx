@@ -4,8 +4,11 @@ import {
   Bell, Calendar, Wrench, RefreshCcw,
   MapPin, Clock, Info, CheckCircle2,
   Home, CheckSquare, Settings, DoorOpen,
-  Search, Menu, Plus, Trash2, Edit2, Power
+  Search, Menu, Plus, Trash2, Edit2, Power,
+  Filter, X, ChevronDown, Check, SlidersHorizontal, ListFilter,
+  Grid
 } from 'lucide-react';
+import TimetableCalendar from '../../components/TimetableCalendar';
 
 export default function BookingDashboard() {
   const [activeView, setActiveView] = useState('overview'); // overview, pending, all-bookings, rooms
@@ -21,7 +24,130 @@ export default function BookingDashboard() {
   const [rejectingId, setRejectingId] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
   
+  // Filter state for All Bookings
+  const [selectedRooms, setSelectedRooms] = useState([]);
+  const [roomSearchQuery, setRoomSearchQuery] = useState('');
+  const [dateFilterType, setDateFilterType] = useState('all'); // 'all', 'quick', 'range'
+  const [quickDateFilter, setQuickDateFilter] = useState('all'); // 'all', 'today', 'tomorrow', 'this_week', 'future'
+  const [dateRange, setDateRange] = useState({ start: '', end: '' });
+  const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'Approved', 'Pending', 'Rejected'
+  const [bookingSearchText, setBookingSearchText] = useState('');
+  const [activeFilterModal, setActiveFilterModal] = useState(null); // null, 'room', 'date', 'status', 'add_filter'
+
   const navigate = useNavigate();
+
+  const uniqueRooms = Array.from(new Set([
+    ...allBookings.map(b => b.room_name).filter(Boolean),
+    ...rooms.map(r => r.name).filter(Boolean)
+  ])).sort();
+
+  const toggleRoomSelection = (roomName) => {
+    if (selectedRooms.includes(roomName)) {
+      setSelectedRooms(selectedRooms.filter(r => r !== roomName));
+    } else {
+      setSelectedRooms([...selectedRooms, roomName]);
+    }
+  };
+
+  const parseBookingDate = (dateStr) => {
+    if (!dateStr) return null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const lower = dateStr.toLowerCase();
+    if (lower.includes('today')) {
+      return new Date(today);
+    }
+    if (lower.includes('tomorrow')) {
+      const tom = new Date(today);
+      tom.setDate(tom.getDate() + 1);
+      return tom;
+    }
+
+    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    for (let i = 0; i < days.length; i++) {
+      if (lower.startsWith(days[i])) {
+        const targetDay = i;
+        const currentDay = today.getDay();
+        let diff = targetDay - currentDay;
+        if (diff <= 0) diff += 7;
+        const nextDate = new Date(today);
+        nextDate.setDate(nextDate.getDate() + diff);
+        return nextDate;
+      }
+    }
+
+    const isoMatch = dateStr.match(/\d{4}-\d{2}-\d{2}/);
+    if (isoMatch) {
+      const parsed = new Date(isoMatch[0] + 'T00:00:00');
+      if (!isNaN(parsed.getTime())) return parsed;
+    }
+
+    return null;
+  };
+
+  const getFilteredBookings = () => {
+    return allBookings.filter(b => {
+      if (bookingSearchText.trim()) {
+        const query = bookingSearchText.toLowerCase();
+        const matchRoom = b.room_name?.toLowerCase().includes(query);
+        const matchUser = b.user_name?.toLowerCase().includes(query);
+        const matchRole = b.role?.toLowerCase().includes(query);
+        const matchPurpose = b.purpose?.toLowerCase().includes(query);
+        if (!matchRoom && !matchUser && !matchRole && !matchPurpose) return false;
+      }
+
+      if (selectedRooms.length > 0) {
+        if (!selectedRooms.includes(b.room_name)) return false;
+      }
+
+      if (statusFilter !== 'all') {
+        if (b.status !== statusFilter) return false;
+      }
+
+      if (dateFilterType === 'quick' && quickDateFilter !== 'all') {
+        const parsed = parseBookingDate(b.booking_date);
+        if (!parsed) return false;
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const tom = new Date(today);
+        tom.setDate(tom.getDate() + 1);
+
+        if (quickDateFilter === 'today') {
+          if (parsed.getTime() !== today.getTime()) return false;
+        } else if (quickDateFilter === 'tomorrow') {
+          if (parsed.getTime() !== tom.getTime()) return false;
+        } else if (quickDateFilter === 'this_week') {
+          const nextWeek = new Date(today);
+          nextWeek.setDate(nextWeek.getDate() + 7);
+          if (parsed < today || parsed > nextWeek) return false;
+        } else if (quickDateFilter === 'future') {
+          if (parsed < today) return false;
+        }
+      } else if (dateFilterType === 'range') {
+        const parsed = parseBookingDate(b.booking_date);
+        if (!parsed) return false;
+
+        if (dateRange.start) {
+          const start = new Date(dateRange.start + 'T00:00:00');
+          if (parsed < start) return false;
+        }
+        if (dateRange.end) {
+          const end = new Date(dateRange.end + 'T23:59:59');
+          if (parsed > end) return false;
+        }
+      }
+
+      return true;
+    });
+  };
+
+  const activeFilterCount = (selectedRooms.length > 0 ? 1 : 0) +
+    ((dateFilterType === 'quick' && quickDateFilter !== 'all') || (dateFilterType === 'range' && (dateRange.start || dateRange.end)) ? 1 : 0) +
+    (statusFilter !== 'all' ? 1 : 0) +
+    (bookingSearchText ? 1 : 0);
 
   const [semesterStart, setSemesterStart] = useState(() => {
     const nextMon = new Date();
@@ -52,6 +178,12 @@ export default function BookingDashboard() {
       const statsRes = await fetch('http://localhost:5001/api/admin/bookings/stats');
       if (statsRes.ok) setStats(await statsRes.json());
 
+      const settingsRes = await fetch('http://localhost:5001/api/admin/settings/auto-booking');
+      if (settingsRes.ok) {
+        const settingsData = await settingsRes.json();
+        setAutoBookingEnabled(settingsData.auto_booking);
+      }
+
       if (activeView === 'pending' || activeView === 'overview') {
         const approvalsRes = await fetch('http://localhost:5001/api/admin/pending-bookings');
         if (approvalsRes.ok) setApprovals(await approvalsRes.json());
@@ -68,6 +200,22 @@ export default function BookingDashboard() {
       }
     } catch (error) {
       console.error("Error fetching database data:", error);
+    }
+  };
+
+  const handleToggleAutoBooking = async () => {
+    const nextState = !autoBookingEnabled;
+    try {
+      const res = await fetch('http://localhost:5001/api/admin/settings/auto-booking', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: nextState })
+      });
+      if (res.ok) {
+        setAutoBookingEnabled(nextState);
+      }
+    } catch (err) {
+      console.error("Error toggling auto booking:", err);
     }
   };
 
@@ -556,14 +704,18 @@ export default function BookingDashboard() {
             </div>
             <button
               className={`w-14 h-8 rounded-full transition-colors flex items-center px-1 ${autoBookingEnabled ? 'bg-primary' : 'bg-slate-300'}`}
-              onClick={() => setAutoBookingEnabled(!autoBookingEnabled)}
+              onClick={handleToggleAutoBooking}
             >
               <div className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform ${autoBookingEnabled ? 'translate-x-6' : 'translate-x-0'}`} />
             </button>
           </div>
           <div>
             <h3 className="font-bold text-slate-900 text-lg">Automated System</h3>
-            <p className="text-slate-500 text-sm mt-1 leading-snug">Automatically approve requests based on availability.</p>
+            <p className="text-slate-500 text-sm mt-1 leading-snug">
+              {autoBookingEnabled 
+                ? "Active: Automatically approve AR Office requests based on availability (Lecture requests excluded)." 
+                : "Disabled: All requests require manual AR approval."}
+            </p>
           </div>
         </div>
       </div>
@@ -575,6 +727,11 @@ export default function BookingDashboard() {
                <div>
                  <p className="font-bold text-slate-900">{b.room_name}</p>
                  <p className="text-sm text-slate-500">{b.user_name} • {b.booking_date}</p>
+                 {b.purpose && (
+                    <p className="text-xs text-slate-600 mt-1 italic font-medium leading-tight">
+                      Purpose: {b.purpose}
+                    </p>
+                 )}
                </div>
                <span className={`text-xs font-bold px-2 py-1 rounded uppercase ${b.status === 'Approved' ? 'bg-green-100 text-green-700' : b.status === 'Rejected' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
                  {b.status}
@@ -624,6 +781,12 @@ export default function BookingDashboard() {
                     <span><strong className="text-slate-900">{req.booking_date}</strong></span>
                   </div>
                 </div>
+                {req.purpose && (
+                  <div className="space-y-1 text-sm text-slate-600">
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Purpose</span>
+                    <p className="font-medium text-slate-900 italic">{req.purpose}</p>
+                  </div>
+                )}
               </div>
               {rejectingId === req.id ? (
                 <div className="flex flex-col gap-2 w-full lg:w-48 shrink-0 mt-4 lg:mt-0">
@@ -657,29 +820,162 @@ export default function BookingDashboard() {
 
   const renderAllBookings = () => (
     <>
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-slate-900">All Bookings</h2>
-        <p className="text-slate-500 mt-1">Complete history of all booking requests.</p>
+      <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900">All Bookings</h2>
+          <p className="text-slate-500 mt-1">Complete history of all booking requests with advanced filtering.</p>
+        </div>
+        
+        {/* Filter Controls Bar */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative">
+            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search user, room, purpose..."
+              value={bookingSearchText}
+              onChange={e => setBookingSearchText(e.target.value)}
+              className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-primary/50 outline-none shadow-sm w-60"
+            />
+            {bookingSearchText && (
+              <button onClick={() => setBookingSearchText('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+          <button
+            onClick={() => setActiveFilterModal('add_filter')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${
+              activeFilterCount > 0
+                ? 'bg-slate-900 text-white border border-slate-800 ring-2 ring-primary/30'
+                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            <Filter size={16} className={activeFilterCount > 0 ? 'text-primary' : 'text-slate-500'} />
+            <span>Add Filter</span>
+            {activeFilterCount > 0 && (
+              <span className="bg-primary text-white text-xs px-2 py-0.5 rounded-full font-bold ml-1">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+
+          {activeFilterCount > 0 && (
+            <button
+              onClick={() => {
+                setSelectedRooms([]);
+                setDateFilterType('all');
+                setQuickDateFilter('all');
+                setDateRange({ start: '', end: '' });
+                setStatusFilter('all');
+                setBookingSearchText('');
+              }}
+              className="text-xs font-bold text-red-600 hover:text-red-700 px-3 py-2 hover:bg-red-50 rounded-xl transition-colors"
+            >
+              Clear All ({activeFilterCount})
+            </button>
+          )}
+        </div>
       </div>
+
+      {activeFilterCount > 0 && (
+        <div className="mb-4 flex flex-wrap items-center gap-2 bg-slate-900 text-white p-3 rounded-xl border border-slate-800 shadow-lg animate-fade-in">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-400 mr-1 flex items-center gap-1.5">
+            <Filter size={12} /> Active Filters:
+          </span>
+
+          {bookingSearchText && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium bg-slate-800 border border-slate-700 text-slate-200">
+              Search: "{bookingSearchText}"
+              <button onClick={() => setBookingSearchText('')} className="hover:text-red-400"><X size={12} /></button>
+            </span>
+          )}
+
+          {selectedRooms.length > 0 && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium bg-blue-900/60 border border-blue-700/50 text-blue-200">
+              Room ({selectedRooms.length}): {selectedRooms.length === 1 ? selectedRooms[0] : `${selectedRooms.length} venues selected`}
+              <button onClick={() => setSelectedRooms([])} className="hover:text-red-400"><X size={12} /></button>
+            </span>
+          )}
+
+          {dateFilterType === 'quick' && quickDateFilter !== 'all' && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium bg-purple-900/60 border border-purple-700/50 text-purple-200">
+              Date: {quickDateFilter === 'today' ? 'Today' : quickDateFilter === 'tomorrow' ? 'Tomorrow' : quickDateFilter === 'this_week' ? 'This Week' : 'Upcoming'}
+              <button onClick={() => { setDateFilterType('all'); setQuickDateFilter('all'); }} className="hover:text-red-400"><X size={12} /></button>
+            </span>
+          )}
+
+          {dateFilterType === 'range' && (dateRange.start || dateRange.end) && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium bg-purple-900/60 border border-purple-700/50 text-purple-200">
+              Date: {dateRange.start || 'Any'} to {dateRange.end || 'Any'}
+              <button onClick={() => { setDateFilterType('all'); setDateRange({ start: '', end: '' }); }} className="hover:text-red-400"><X size={12} /></button>
+            </span>
+          )}
+
+          {statusFilter !== 'all' && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium bg-amber-900/60 border border-amber-700/50 text-amber-200">
+              Status: {statusFilter}
+              <button onClick={() => setStatusFilter('all')} className="hover:text-red-400"><X size={12} /></button>
+            </span>
+          )}
+        </div>
+      )}
+
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-slate-600">
             <thead className="bg-slate-50 text-slate-900 font-bold border-b border-slate-200">
               <tr>
-                <th className="px-6 py-4">Room</th>
+                <th className="px-6 py-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <span>Room</span>
+                    <button
+                      onClick={() => setActiveFilterModal(activeFilterModal === 'room' ? null : 'room')}
+                      className={`p-1.5 rounded-lg hover:bg-slate-200 transition-colors ${selectedRooms.length > 0 ? 'text-primary bg-primary/15 font-bold shadow-sm' : 'text-slate-400'}`}
+                      title="Filter by Room"
+                    >
+                      <Filter size={14} />
+                    </button>
+                  </div>
+                </th>
                 <th className="px-6 py-4">User</th>
                 <th className="px-6 py-4">Role</th>
-                <th className="px-6 py-4">Date/Time</th>
-                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <span>Date/Time</span>
+                    <button
+                      onClick={() => setActiveFilterModal(activeFilterModal === 'date' ? null : 'date')}
+                      className={`p-1.5 rounded-lg hover:bg-slate-200 transition-colors ${(dateFilterType === 'quick' && quickDateFilter !== 'all') || (dateFilterType === 'range' && (dateRange.start || dateRange.end)) ? 'text-primary bg-primary/15 font-bold shadow-sm' : 'text-slate-400'}`}
+                      title="Filter by Date/Time"
+                    >
+                      <Filter size={14} />
+                    </button>
+                  </div>
+                </th>
+                <th className="px-6 py-4">Purpose</th>
+                <th className="px-6 py-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <span>Status</span>
+                    <button
+                      onClick={() => setActiveFilterModal(activeFilterModal === 'status' ? null : 'status')}
+                      className={`p-1.5 rounded-lg hover:bg-slate-200 transition-colors ${statusFilter !== 'all' ? 'text-primary bg-primary/15 font-bold shadow-sm' : 'text-slate-400'}`}
+                      title="Filter by Status"
+                    >
+                      <Filter size={14} />
+                    </button>
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {allBookings.map(b => (
+              {getFilteredBookings().map(b => (
                 <tr key={b.id} className="hover:bg-slate-50 transition-colors">
                   <td className="px-6 py-4 font-medium text-slate-900">{b.room_name}</td>
                   <td className="px-6 py-4">{b.user_name}</td>
                   <td className="px-6 py-4 text-xs"><span className="bg-slate-100 px-2 py-1 rounded">{b.role}</span></td>
                   <td className="px-6 py-4">{b.booking_date}</td>
+                  <td className="px-6 py-4 text-xs italic font-medium">{b.purpose || 'N/A'}</td>
                   <td className="px-6 py-4">
                      <span className={`text-xs font-bold px-2 py-1 rounded uppercase ${b.status === 'Approved' ? 'bg-green-100 text-green-700' : b.status === 'Rejected' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
                        {b.status}
@@ -694,7 +990,7 @@ export default function BookingDashboard() {
               ))}
             </tbody>
           </table>
-          {allBookings.length === 0 && <div className="p-8 text-center text-slate-500">No bookings found.</div>}
+          {getFilteredBookings().length === 0 && <div className="p-8 text-center text-slate-500 font-medium">No bookings match your filter criteria.</div>}
         </div>
       </div>
     </>
@@ -796,6 +1092,10 @@ export default function BookingDashboard() {
             <Calendar size={20} className="shrink-0" />
             {sidebarOpen && <span className="font-semibold text-sm">All Bookings</span>}
           </button>
+          <button onClick={() => setActiveView('timetable')} className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-colors ${activeView === 'timetable' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}>
+            <Grid size={20} className="shrink-0" />
+            {sidebarOpen && <span className="font-semibold text-sm">Timetable</span>}
+          </button>
           <button onClick={() => setActiveView('rooms')} className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-colors ${activeView === 'rooms' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}>
             <DoorOpen size={20} className="shrink-0" />
             {sidebarOpen && <span className="font-semibold text-sm">Room Management</span>}
@@ -846,7 +1146,266 @@ export default function BookingDashboard() {
           {activeView === 'all-bookings' && renderAllBookings()}
           {activeView === 'rooms' && renderRooms()}
           {activeView === 'bulk-import' && renderBulkImport()}
+          {activeView === 'timetable' && <TimetableCalendar />}
         </div>
+        {/* Floating Dark-Themed Filter Modal / Popover */}
+        {activeFilterModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in p-4" onClick={() => setActiveFilterModal(null)}>
+            <div
+              className="bg-slate-900 text-white border border-slate-750 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-scale-up"
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-850/50">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-primary/20 text-primary flex items-center justify-center">
+                    <Filter size={18} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-base text-white">
+                      {activeFilterModal === 'room' && 'Filter by Room'}
+                      {activeFilterModal === 'date' && 'Filter by Date & Time'}
+                      {activeFilterModal === 'status' && 'Filter by Status'}
+                      {activeFilterModal === 'add_filter' && 'Table Filter'}
+                    </h3>
+                    <p className="text-xs text-slate-400">
+                      {activeFilterModal === 'add_filter' ? 'Refine table criteria in real-time' : 'Select criteria to apply'}
+                    </p>
+                  </div>
+                </div>
+                <button onClick={() => setActiveFilterModal(null)} className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors">
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
+                {activeFilterModal === 'add_filter' && (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Filter Column</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setActiveFilterModal('room')}
+                          className={`py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${selectedRooms.length > 0 ? 'bg-primary border-primary text-white shadow' : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-750'}`}
+                        >
+                          <DoorOpen size={14} /> Room ({selectedRooms.length || 'All'})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setActiveFilterModal('date')}
+                          className={`py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${(dateFilterType === 'quick' && quickDateFilter !== 'all') || (dateFilterType === 'range' && (dateRange.start || dateRange.end)) ? 'bg-primary border-primary text-white shadow' : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-750'}`}
+                        >
+                          <Calendar size={14} /> Date/Time
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setActiveFilterModal('status')}
+                          className={`py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${statusFilter !== 'all' ? 'bg-primary border-primary text-white shadow' : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-750'}`}
+                        >
+                          <ListFilter size={14} /> Status
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-750 space-y-2">
+                      <div className="flex justify-between items-center text-xs font-bold text-slate-300">
+                        <span>Current Active Filters</span>
+                        <span className="bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full text-[10px]">{activeFilterCount}</span>
+                      </div>
+                      {activeFilterCount === 0 ? (
+                        <p className="text-xs text-slate-500 italic">No filters currently applied. All table rows are shown.</p>
+                      ) : (
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                          {bookingSearchText && <span className="text-[11px] bg-slate-700 px-2 py-1 rounded text-slate-200">Search: "{bookingSearchText}"</span>}
+                          {selectedRooms.length > 0 && <span className="text-[11px] bg-blue-900/80 text-blue-200 px-2 py-1 rounded">Rooms: {selectedRooms.length} selected</span>}
+                          {dateFilterType === 'quick' && quickDateFilter !== 'all' && <span className="text-[11px] bg-purple-900/80 text-purple-200 px-2 py-1 rounded">Date: {quickDateFilter}</span>}
+                          {dateFilterType === 'range' && (dateRange.start || dateRange.end) && <span className="text-[11px] bg-purple-900/80 text-purple-200 px-2 py-1 rounded">Range: {dateRange.start || '...'} to {dateRange.end || '...'}</span>}
+                          {statusFilter !== 'all' && <span className="text-[11px] bg-amber-900/80 text-amber-200 px-2 py-1 rounded">Status: {statusFilter}</span>}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {activeFilterModal === 'room' && (
+                  <div className="space-y-4">
+                    <div className="relative">
+                      <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder="Search venue name..."
+                        value={roomSearchQuery}
+                        onChange={e => setRoomSearchQuery(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-400 focus:ring-2 focus:ring-primary/50 outline-none"
+                      />
+                    </div>
+
+                    <div className="flex justify-between items-center text-xs font-bold text-slate-400 px-1">
+                      <span>Select Venues ({selectedRooms.length})</span>
+                      <div className="flex gap-3">
+                        <button type="button" onClick={() => setSelectedRooms(uniqueRooms)} className="text-primary hover:underline">Select All</button>
+                        <button type="button" onClick={() => setSelectedRooms([])} className="text-red-400 hover:underline">Clear</button>
+                      </div>
+                    </div>
+
+                    <div className="max-h-52 overflow-y-auto space-y-1.5 pr-1 border border-slate-800 rounded-xl p-2 bg-slate-950/40">
+                      {uniqueRooms.filter(r => r.toLowerCase().includes(roomSearchQuery.toLowerCase())).map(roomName => {
+                        const isSelected = selectedRooms.includes(roomName);
+                        return (
+                          <div
+                            key={roomName}
+                            onClick={() => toggleRoomSelection(roomName)}
+                            className={`flex items-center justify-between p-2.5 rounded-lg cursor-pointer transition-colors text-xs font-medium ${isSelected ? 'bg-primary/20 text-white border border-primary/40' : 'hover:bg-slate-800 text-slate-300'}`}
+                          >
+                            <span>{roomName}</span>
+                            <div className={`w-4 h-4 rounded flex items-center justify-center border ${isSelected ? 'bg-primary border-primary text-white' : 'border-slate-600 bg-slate-800'}`}>
+                              {isSelected && <Check size={12} />}
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {uniqueRooms.filter(r => r.toLowerCase().includes(roomSearchQuery.toLowerCase())).length === 0 && (
+                        <p className="text-center text-xs text-slate-500 py-4">No matching venues found.</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {activeFilterModal === 'date' && (
+                  <div className="space-y-5">
+                    <div className="flex bg-slate-800 p-1 rounded-xl border border-slate-750">
+                      <button
+                        type="button"
+                        onClick={() => setDateFilterType('quick')}
+                        className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${dateFilterType === 'quick' ? 'bg-primary text-white shadow' : 'text-slate-400 hover:text-white'}`}
+                      >
+                        Quick Filters
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDateFilterType('range')}
+                        className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${dateFilterType === 'range' ? 'bg-primary text-white shadow' : 'text-slate-400 hover:text-white'}`}
+                      >
+                        Date Range Picker
+                      </button>
+                    </div>
+
+                    {dateFilterType === 'quick' ? (
+                      <div className="grid grid-cols-2 gap-2.5">
+                        {[
+                          { id: 'all', label: 'All Dates', icon: '🗓️' },
+                          { id: 'today', label: 'Today', icon: '📍' },
+                          { id: 'tomorrow', label: 'Tomorrow', icon: '➡️' },
+                          { id: 'this_week', label: 'This Week', icon: '📅' },
+                          { id: 'future', label: 'Upcoming', icon: '⏳' }
+                        ].map(opt => (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() => setQuickDateFilter(opt.id)}
+                            className={`p-3 rounded-xl border text-left flex items-center gap-2.5 transition-all text-xs font-bold ${quickDateFilter === opt.id ? 'bg-primary/20 border-primary text-white ring-1 ring-primary' : 'bg-slate-800/80 border-slate-700/80 text-slate-300 hover:bg-slate-750'}`}
+                          >
+                            <span>{opt.icon}</span>
+                            <span>{opt.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="space-y-4 bg-slate-800/50 p-4 rounded-xl border border-slate-750">
+                        <div>
+                          <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Start Date (From)</label>
+                          <input
+                            type="date"
+                            value={dateRange.start}
+                            onChange={e => setDateRange({ ...dateRange, start: e.target.value })}
+                            className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs font-medium text-white outline-none focus:ring-2 focus:ring-primary/50"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">End Date (To)</label>
+                          <input
+                            type="date"
+                            value={dateRange.end}
+                            onChange={e => setDateRange({ ...dateRange, end: e.target.value })}
+                            className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs font-medium text-white outline-none focus:ring-2 focus:ring-primary/50"
+                          />
+                        </div>
+                        {(dateRange.start || dateRange.end) && (
+                          <button
+                            type="button"
+                            onClick={() => setDateRange({ start: '', end: '' })}
+                            className="text-xs font-bold text-red-400 hover:underline w-full text-right block"
+                          >
+                            Clear Date Range
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {activeFilterModal === 'status' && (
+                  <div className="grid grid-cols-2 gap-2.5">
+                    {[
+                      { id: 'all', label: 'All Statuses', color: 'bg-slate-800 border-slate-700 text-slate-300' },
+                      { id: 'Approved', label: 'Approved', color: 'bg-green-950/60 border-green-700 text-green-300' },
+                      { id: 'Pending', label: 'Pending', color: 'bg-amber-950/60 border-amber-700 text-amber-300' },
+                      { id: 'Rejected', label: 'Rejected', color: 'bg-red-950/60 border-red-700 text-red-300' }
+                    ].map(st => (
+                      <button
+                        key={st.id}
+                        type="button"
+                        onClick={() => setStatusFilter(st.id)}
+                        className={`p-3.5 rounded-xl border font-bold text-xs flex items-center justify-between transition-all ${statusFilter === st.id ? 'ring-2 ring-primary border-primary shadow-lg' : ''} ${st.color}`}
+                      >
+                        <span>{st.label}</span>
+                        {statusFilter === st.id && <Check size={14} className="text-primary" />}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Footer */}
+              <div className="px-6 py-4 border-t border-slate-800 flex items-center justify-between bg-slate-850/50">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (activeFilterModal === 'room') setSelectedRooms([]);
+                    else if (activeFilterModal === 'date') { setDateFilterType('all'); setQuickDateFilter('all'); setDateRange({ start: '', end: '' }); }
+                    else if (activeFilterModal === 'status') setStatusFilter('all');
+                    else {
+                      setSelectedRooms([]); setDateFilterType('all'); setQuickDateFilter('all'); setDateRange({ start: '', end: '' }); setStatusFilter('all'); setBookingSearchText('');
+                    }
+                  }}
+                  className="text-xs font-bold text-slate-400 hover:text-white px-3 py-2 rounded-lg hover:bg-slate-800 transition-colors"
+                >
+                  Reset Filter
+                </button>
+
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setActiveFilterModal(null)}
+                    className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-300 font-bold text-xs transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveFilterModal(null)}
+                    className="px-5 py-2 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-xs shadow-md shadow-primary/20 transition-all flex items-center gap-1.5"
+                  >
+                    <span>Add filter</span>
+                    <Check size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

@@ -4,7 +4,8 @@ const cors = require('cors');
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Database Pool
 const pool = mysql.createPool({
@@ -22,6 +23,7 @@ async function initDB() {
   try { await pool.query('ALTER TABLE bookings ADD COLUMN assigned_lecturer VARCHAR(255)'); } catch(e){}
   try { await pool.query('ALTER TABLE bookings ADD COLUMN purpose TEXT'); } catch(e){}
   try { await pool.query('ALTER TABLE bookings ADD COLUMN rejection_reason TEXT'); } catch(e){}
+  try { await pool.query("ALTER TABLE bookings ADD COLUMN booking_type VARCHAR(50) DEFAULT 'AR Office'"); } catch(e){}
   try { await pool.query('ALTER TABLE faults ADD COLUMN maintenance_notes TEXT'); } catch(e){}
   try { 
     await pool.query('ALTER TABLE faults MODIFY COLUMN photo_url LONGTEXT'); 
@@ -30,6 +32,16 @@ async function initDB() {
   }
   try { await pool.query('ALTER TABLE faults ADD COLUMN worker_photo LONGTEXT'); } catch(e){}
   try { await pool.query('ALTER TABLE faults ADD COLUMN assigned_technician_id INT'); } catch(e){}
+  try { await pool.query('ALTER TABLE faults MODIFY COLUMN location TEXT'); } catch(e){}
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS settings (
+        setting_key VARCHAR(50) PRIMARY KEY,
+        setting_value VARCHAR(255) NOT NULL
+      )
+    `);
+    await pool.query(`INSERT IGNORE INTO settings (setting_key, setting_value) VALUES ('auto_booking', 'true')`);
+  } catch(e){}
 }
 initDB();
 
@@ -82,6 +94,33 @@ app.put('/api/faults/:id/resolve', async (req, res) => {
   }
 });
 
+// Schedule Timetable Endpoints
+app.get('/api/schedule/all', async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT 
+         b.id, 
+         b.title as room_name, 
+         b.time_display, 
+         b.status, 
+         b.icon, 
+         b.user_id, 
+         b.end_time, 
+         b.assigned_lecturer, 
+         b.purpose, 
+         b.rejection_reason,
+         u.name as requester_name 
+       FROM bookings b 
+       LEFT JOIN users u ON b.user_id = u.id 
+       WHERE b.status = 'Approved' 
+       ORDER BY b.time_display ASC`
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Bookings Endpoints
 app.get('/api/bookings/:userId', async (req, res) => {
   const { userId } = req.params;
@@ -98,12 +137,80 @@ app.get('/api/bookings/:userId', async (req, res) => {
 
 app.post('/api/bookings', async (req, res) => {
   const { title, time_display, user_id, icon, status, end_time, assigned_lecturer, purpose } = req.body;
+  const connection = await pool.getConnection();
   try {
-    const [result] = await pool.query(
-      'INSERT INTO bookings (title, time_display, user_id, icon, status, end_time, assigned_lecturer, purpose) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [title, time_display, user_id, icon || 'meeting_room', status || 'Pending', end_time, assigned_lecturer || null, purpose || null]
+    await connection.beginTransaction();
+
+    let requestType = 'AR Office';
+    if (assigned_lecturer) {
+      const [lRows] = await connection.query('SELECT role FROM users WHERE name = ?', [assigned_lecturer]);
+      if (lRows.length > 0) {
+        if (lRows[0].role === 'Lecturer') {
+          requestType = 'Lecture';
+        } else {
+          requestType = 'AR Office';
+        }
+      } else {
+        requestType = 'AR Office';
+      }
+    }
+
+    if (status === 'Pending AR') {
+      const [settings] = await connection.query("SELECT setting_value FROM settings WHERE setting_key = 'auto_booking'");
+      const isAutoEnabled = settings.length > 0 && settings[0].setting_value === 'true';
+
+      if (isAutoEnabled) {
+        const [conflicts] = await connection.query(
+          'SELECT id FROM bookings WHERE title = ? AND time_display = ? AND status = "Approved" FOR UPDATE',
+          [title, time_display]
+        );
+
+        let finalStatus = 'Approved';
+        let rejectionReason = null;
+
+        if (conflicts.length > 0) {
+          finalStatus = 'Rejected';
+          rejectionReason = 'Automated system: Room is already booked for this time slot.';
+        }
+
+        const [result] = await connection.query(
+          'INSERT INTO bookings (title, time_display, user_id, icon, status, end_time, assigned_lecturer, purpose, rejection_reason, booking_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          [title, time_display, user_id, icon || 'meeting_room', finalStatus, end_time || null, assigned_lecturer || null, purpose || null, rejectionReason, requestType]
+        );
+
+        await connection.commit();
+        return res.json({ success: true, id: result.insertId, status: finalStatus, autoProcessed: true, booking_type: requestType });
+      }
+    }
+
+    const [result] = await connection.query(
+      'INSERT INTO bookings (title, time_display, user_id, icon, status, end_time, assigned_lecturer, purpose, booking_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [title, time_display, user_id, icon || 'meeting_room', status || 'Pending', end_time || null, assigned_lecturer || null, purpose || null, requestType]
     );
-    res.json({ success: true, id: result.insertId });
+
+    await connection.commit();
+    res.json({ success: true, id: result.insertId, status: status || 'Pending', autoProcessed: false, booking_type: requestType });
+  } catch (err) {
+    await connection.rollback();
+    res.status(500).json({ error: err.message });
+  } finally {
+    connection.release();
+  }
+});
+
+app.get('/api/rooms', async (req, res) => {
+  try {
+    const [rooms] = await pool.query('SELECT * FROM rooms');
+    res.json(rooms);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/lecturers', async (req, res) => {
+  try {
+    const [lecturers] = await pool.query("SELECT id, name, username, department FROM users WHERE role = 'Lecturer'");
+    res.json(lecturers);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -129,11 +236,47 @@ app.get('/api/lecturer/requests/:id', async (req, res) => {
 
 app.put('/api/lecturer/requests/:id/forward', async (req, res) => {
   const { id } = req.params;
+  const connection = await pool.getConnection();
   try {
-    await pool.query('UPDATE bookings SET status = "Pending AR" WHERE id = ?', [id]);
-    res.json({ success: true });
+    await connection.beginTransaction();
+
+    // Step 2 (Conditional AR Approval): Triggers ONLY AFTER Lecture-level approval is successfully completed.
+    const [settings] = await connection.query("SELECT setting_value FROM settings WHERE setting_key = 'auto_booking'");
+    const isAutoEnabled = settings.length > 0 && settings[0].setting_value === 'true';
+
+    if (isAutoEnabled) {
+      const [bookingRows] = await connection.query('SELECT title, time_display FROM bookings WHERE id = ? FOR UPDATE', [id]);
+      if (bookingRows.length > 0) {
+        const { title, time_display } = bookingRows[0];
+        // Check for existing APPROVED bookings for that specific Room and Time using atomic lock FOR UPDATE
+        const [conflicts] = await connection.query(
+          'SELECT id FROM bookings WHERE title = ? AND time_display = ? AND status = "Approved" AND id != ? FOR UPDATE',
+          [title, time_display, id]
+        );
+
+        let finalStatus = 'Approved';
+        let rejectionReason = null;
+
+        if (conflicts.length > 0) {
+          finalStatus = 'Rejected';
+          rejectionReason = 'Automated system: Room is already booked for this time slot.';
+        }
+
+        await connection.query('UPDATE bookings SET status = ?, rejection_reason = ? WHERE id = ?', [finalStatus, rejectionReason, id]);
+        await connection.commit();
+        return res.json({ success: true, status: finalStatus, autoProcessed: true });
+      }
+    }
+
+    // If Automated System is DISABLED: stay in PENDING status (Pending AR) for manual AR admin review
+    await connection.query('UPDATE bookings SET status = "Pending AR" WHERE id = ?', [id]);
+    await connection.commit();
+    res.json({ success: true, status: "Pending AR", autoProcessed: false });
   } catch (err) {
+    await connection.rollback();
     res.status(500).json({ error: err.message });
+  } finally {
+    connection.release();
   }
 });
 
@@ -332,6 +475,29 @@ app.put('/api/technician/tickets/:id', async (req, res) => {
   }
 });
 
+app.get('/api/admin/settings/auto-booking', async (req, res) => {
+  try {
+    const [rows] = await pool.query("SELECT setting_value FROM settings WHERE setting_key = 'auto_booking'");
+    res.json({ auto_booking: rows.length > 0 ? rows[0].setting_value === 'true' : false });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/admin/settings/auto-booking', async (req, res) => {
+  const { enabled } = req.body;
+  try {
+    const val = enabled ? 'true' : 'false';
+    await pool.query(
+      "INSERT INTO settings (setting_key, setting_value) VALUES ('auto_booking', ?) ON DUPLICATE KEY UPDATE setting_value = ?",
+      [val, val]
+    );
+    res.json({ success: true, auto_booking: enabled });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Booking Admin Endpoints
 app.get('/api/admin/bookings/stats', async (req, res) => {
   try {
@@ -356,6 +522,7 @@ app.get('/api/admin/pending-bookings', async (req, res) => {
             b.time_display as booking_date, 
             b.status,
             b.assigned_lecturer,
+            b.purpose,
             u.name AS user_name, 
             u.role
         FROM bookings b
@@ -420,6 +587,7 @@ app.get('/api/admin/all-bookings', async (req, res) => {
             b.status,
             b.rejection_reason,
             b.assigned_lecturer,
+            b.purpose,
             u.name AS user_name, 
             u.role
         FROM bookings b

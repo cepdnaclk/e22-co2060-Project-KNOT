@@ -1,0 +1,8 @@
+- `[x]` Implement backend API endpoints in `server.js`
+  - `[x]` Add GET `/api/rooms`
+  - `[x]` Add GET `/api/lecturers`
+- `[x]` Modify `BookSpace.jsx` in Student_Portal
+  - `[x]` Restore simple clean developer updates layout for Student & Lecturer roles
+  - `[x]` Fetch lecturers dynamically for the Student role to fix "current approved two lecturers are not showing"
+  - `[x]` Preserve booking_type field support in payload
+- `[x]` Verify everything works as expected

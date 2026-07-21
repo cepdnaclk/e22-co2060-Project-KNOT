@@ -164,9 +164,21 @@ export default function TicketDetails() {
 
         <section className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 p-6 mb-6">
           <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Issue Description</h2>
-          <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-lg p-4 font-medium">
+          <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-lg p-4 font-medium mb-4">
             {ticket.description || 'No description provided by the user.'}
           </p>
+          {ticket.photo_url && (
+            <div className="mt-4">
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 block">Evidence Photo</label>
+              <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 max-h-96 flex items-center justify-center p-2">
+                <img 
+                  src={ticket.photo_url} 
+                  alt="Fault Evidence" 
+                  className="max-w-full max-h-80 object-contain rounded-lg shadow-sm"
+                />
+              </div>
+            </div>
+          )}
         </section>
 
         <section className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 p-6 mb-6">

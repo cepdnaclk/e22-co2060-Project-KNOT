@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KNOT Campus Services Gateway</title>
+  <!-- Google Fonts: Outfit and Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-dark: #0a0e1a;
+      --bg-card: rgba(16, 22, 42, 0.65);
+      --bg-card-hover: rgba(22, 32, 60, 0.85);
+      --primary: #3b82f6;
+      --primary-glow: rgba(59, 130, 246, 0.4);
+      --success: #10b981;
+      --success-glow: rgba(16, 185, 129, 0.4);
+      --danger: #ef4444;
+      --danger-glow: rgba(239, 68, 68, 0.4);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-hover: rgba(59, 130, 246, 0.3);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Animated background gradients */
+    .bg-glowing-blobs {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -1;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.15;
+      animation: pulse 12s infinite alternate;
+    }
+
+    .blob-1 {
+      top: -10%;
+      left: -10%;
+      width: 50vw;
+      height: 50vw;
+      background: var(--primary);
+    }
+
+    .blob-2 {
+      bottom: -10%;
+      right: -10%;
+      width: 55vw;
+      height: 55vw;
+      background: #8b5cf6;
+      animation-delay: 2s;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1) translate(0px, 0px); }
+      100% { transform: scale(1.15) translate(40px, 30px); }
+    }
+
+    .container {
+      max-width: 1100px;
+      width: 100%;
+      padding: 40px 24px;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 48px;
+    }
+
+    header {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-badge {
+      background: linear-gradient(135deg, var(--primary), #8b5cf6);
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 24px;
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+    }
+
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 42px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(to right, #ffffff, #e2e8f0, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 16px;
+      max-width: 600px;
+      line-height: 1.6;
+    }
+
+    /* Central hub layout */
+    .grid {
+      display: grid;
+      grid-template-cols: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 30px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 32px;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 24px;
+      padding: 1px;
+      background: linear-gradient(to bottom right, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    .card:hover {
+      background: var(--bg-card-hover);
+      transform: translateY(-8px);
+      border-color: var(--border-hover);
+      box-shadow: 0 20px 40px rgba(59, 130, 246, 0.1);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .icon-wrapper {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.04);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 24px;
+      transition: all 0.3s ease;
+    }
+
+    .card:hover .icon-wrapper {
+      background: rgba(59, 130, 246, 0.15);
+      border-color: rgba(59, 130, 246, 0.3);
+      transform: scale(1.05);
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 6px 12px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--text-muted);
+    }
+
+    .status-badge.online {
+      color: var(--success);
+      background: rgba(16, 185, 129, 0.06);
+      border-color: rgba(16, 185, 129, 0.15);
+    }
+    .status-badge.online .status-dot {
+      background-color: var(--success);
+      box-shadow: 0 0 10px var(--success-glow);
+    }
+
+    .status-badge.offline {
+      color: var(--danger);
+      background: rgba(239, 68, 68, 0.06);
+      border-color: rgba(239, 68, 68, 0.15);
+    }
+    .status-badge.offline .status-dot {
+      background-color: var(--danger);
+      box-shadow: 0 0 10px var(--danger-glow);
+    }
+
+    .card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .card-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .card-desc {
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .tag {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      color: #cbd5e1;
+    }
+
+    .launch-btn {
+      width: 100%;
+      background: var(--primary);
+      color: #fff;
+      text-decoration: none;
+      padding: 14px;
+      border-radius: 14px;
+      font-weight: 600;
+      font-size: 14px;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+      cursor: pointer;
+    }
+
+    .launch-btn:hover {
+      background: #2563eb;
+      box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .launch-btn.disabled {
+      background: #1e293b;
+      color: #64748b;
+      box-shadow: none;
+      pointer-events: none;
+      cursor: not-allowed;
+    }
+
+    /* Diagnostics Widget */
+    .diagnostics {
+      background: rgba(16, 22, 42, 0.4);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      backdrop-filter: blur(8px);
+    }
+
+    .diag-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .diag-grid {
+      display: grid;
+      grid-template-cols: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .diag-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+    }
+
+    .diag-port {
+      color: var(--text-muted);
+      font-family: monospace;
+    }
+
+    .diag-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+    }
+
+    .diag-status.online { color: var(--success); }
+    .diag-status.offline { color: var(--danger); }
+
+    footer {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-top: 24px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-glowing-blobs">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+  </div>
+
+  <div class="container">
+    <header>
+      <div class="logo-container">
+        <div class="logo-badge">K</div>
+        <h1>KNOT Services Hub</h1>
+      </div>
+      <p class="subtitle">Welcome to the central gateway of the KNOT Platform. Launch applications, check operational backend systems, and verify server diagnostics below.</p>
+    </header>
+
+    <div class="grid">
+      <!-- Portal 1: Academic & Booking -->
+      <div class="card" id="card-academic">
+        <div class="card-header">
+          <div class="icon-wrapper">📅</div>
+          <div class="status-badge" id="status-academic">
+            <div class="status-dot"></div>
+            <span class="status-text">Checking</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <h2 class="card-title">Academic & Space Booking</h2>
+          <p class="card-desc">Reservations for classrooms, lecture halls, and labs. Review calendars, approve bookings, and manage campus schedules.</p>
+          <div class="card-tags">
+            <span class="tag">Students</span>
+            <span class="tag">Lecturers</span>
+            <span class="tag">Booking Admin</span>
+          </div>
+        </div>
+        <a href="http://localhost:5173" target="_blank" class="launch-btn" id="btn-academic">
+          Launch Application ↗
+        </a>
+      </div>
+
+      <!-- Portal 2: Maintenance Admin -->
+      <div class="card" id="card-maintenance">
+        <div class="card-header">
+          <div class="icon-wrapper">🛠️</div>
+          <div class="status-badge" id="status-maintenance">
+            <div class="status-dot"></div>
+            <span class="status-text">Checking</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <h2 class="card-title">Maintenance Admin</h2>
+          <p class="card-desc">Campus facilities fault management console. Register new faults, allocate technicians, write repair notes, and verify completions.</p>
+          <div class="card-tags">
+            <span class="tag">Facility Managers</span>
+            <span class="tag">Technicians</span>
+          </div>
+        </div>
+        <a href="http://localhost:5174" target="_blank" class="launch-btn" id="btn-maintenance">
+          Launch Console ↗
+        </a>
+      </div>
+
+      <!-- Portal 3: Maintenance Worker -->
+      <div class="card" id="card-worker">
+        <div class="card-header">
+          <div class="icon-wrapper">👷</div>
+          <div class="status-badge" id="status-worker">
+            <div class="status-dot"></div>
+            <span class="status-text">Checking</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <h2 class="card-title">Worker Portal</h2>
+          <p class="card-desc">Mobile field-worker dashboard. Access ticket task sheets, submit resolved ticket proof, and upload camera photo attachments.</p>
+          <div class="card-tags">
+            <span class="tag">Technicians</span>
+            <span class="tag">Field Workers</span>
+          </div>
+        </div>
+        <a href="http://localhost:5003/maintenance_worker_portal" target="_blank" class="launch-btn" id="btn-worker">
+          Launch Worker Portal ↗
+        </a>
+      </div>
+    </div>
+
+    <!-- Live Diagnostics Panel -->
+    <div class="diagnostics">
+      <h3 class="diag-title">🔌 Active Port Monitor & Diagnostics</h3>
+      <div class="diag-grid">
+        <div class="diag-item">
+          <div>
+            <span style="font-weight:600; display:block;">Academic API Backend</span>
+            <span class="diag-port">Port 5001</span>
+          </div>
+          <div class="diag-status" id="diag-port-5001">
+            <span>●</span> <span class="status-lbl">Offline</span>
+          </div>
+        </div>
+
+        <div class="diag-item">
+          <div>
+            <span style="font-weight:600; display:block;">Academic Web Client</span>
+            <span class="diag-port">Port 5173</span>
+          </div>
+          <div class="diag-status" id="diag-port-5173">
+            <span>●</span> <span class="status-lbl">Offline</span>
+          </div>
+        </div>
+
+        <div class="diag-item">
+          <div>
+            <span style="font-weight:600; display:block;">Operations API Backend</span>
+            <span class="diag-port">Port 5003</span>
+          </div>
+          <div class="diag-status" id="diag-port-5003">
+            <span>●</span> <span class="status-lbl">Offline</span>
+          </div>
+        </div>
+
+        <div class="diag-item">
+          <div>
+            <span style="font-weight:600; display:block;">Operations Web Client</span>
+            <span class="diag-port">Port 5174</span>
+          </div>
+          <div class="diag-status" id="diag-port-5174">
+            <span>●</span> <span class="status-lbl">Offline</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <p>&copy; 2026 KNOT Campus Systems Platform. Unified Local Host Gateway.</p>
+    </footer>
+  </div>
+
+  <script>
+    // Map service status to corresponding health check endpoints/ports
+    async function checkHealth() {
+      try {
+        const response = await fetch('/api/health');
+        if (!response.ok) throw new Error('API server unavailable');
+        const data = await response.json();
+        
+        updateServiceStatus('academic', data['Student Frontend'], 'btn-academic');
+        updateServiceStatus('maintenance', data['Maintenance Frontend'], 'btn-maintenance');
+        updateServiceStatus('worker', data['Maintenance Backend'], 'btn-worker');
+
+        updateDiagStatus('5001', data['Student Backend']);
+        updateDiagStatus('5173', data['Student Frontend']);
+        updateDiagStatus('5003', data['Maintenance Backend']);
+        updateDiagStatus('5174', data['Maintenance Frontend']);
+      } catch (err) {
+        console.error('Error fetching health status:', err);
+        // Fallback to all offline if gateway API fails
+        ['academic', 'maintenance', 'worker'].forEach(id => {
+          updateServiceStatus(id, false, `btn-${id}`);
+        });
+        ['5001', '5173', '5003', '5174'].forEach(port => {
+          updateDiagStatus(port, false);
+        });
+      }
+    }
+
+    function updateServiceStatus(id, isOnline, btnId) {
+      const badge = document.getElementById(`status-${id}`);
+      const btn = document.getElementById(btnId);
+      const textSpan = badge.querySelector('.status-text');
+
+      if (isOnline) {
+        badge.className = 'status-badge online';
+        textSpan.textContent = 'Online';
+        btn.className = 'launch-btn';
+      } else {
+        badge.className = 'status-badge offline';
+        textSpan.textContent = 'Offline';
+        btn.className = 'launch-btn disabled';
+      }
+    }
+
+    function updateDiagStatus(port, isOnline) {
+      const diag = document.getElementById(`diag-port-${port}`);
+      const lbl = diag.querySelector('.status-lbl');
+      
+      if (isOnline) {
+        diag.className = 'diag-status online';
+        lbl.textContent = 'Online';
+      } else {
+        diag.className = 'diag-status offline';
+        lbl.textContent = 'Offline';
+      }
+    }
+
+    // Initial check and start interval polling
+    checkHealth();
+    setInterval(checkHealth, 3000);
+  </script>
+</body>
+</html>

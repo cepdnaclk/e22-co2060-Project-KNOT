@@ -1,0 +1,16 @@
+{
+  "name": "knot-campus-gateway",
+  "version": "1.0.0",
+  "description": "Unified KNOT platform local gateway hub",
+  "main": "gateway_server.js",
+  "scripts": {
+    "start": "node gateway_server.js"
+  },
+  "keywords": [
+    "knot",
+    "gateway",
+    "portal"
+  ],
+  "author": "Antigravity",
+  "license": "ISC"
+}

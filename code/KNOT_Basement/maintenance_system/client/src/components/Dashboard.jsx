@@ -9,14 +9,16 @@ import {
 
 // Comprehensive KNOT campus location list for autocomplete
 const KNOT_LOCATIONS = [
-  'EOE Hall - Main Entrance',
-  'EOE Hall - Level 2',
-  'EOE Hall - Level 3',
-  'EOE Hall - Auditorium',
-  'D01 Seminar Room',
-  'D02 Seminar Room',
-  'D03 Seminar Room',
-  'D04 Lecture Hall',
+  'EOE Hall - Engineering South',
+  'DO1 - Drawing Office 1',
+  'DO2 - Drawing Office 2',
+  'LH01 - Lecture Hall 01',
+  'LH02 - Lecture Hall 02',
+  'Seminar Room A',
+  'Seminar Room B',
+  'Computer Lab 01',
+  'Computer Lab 02',
+  'Electronics Lab',
   'Library Level 1 - Reading Area',
   'Library Level 2 - Quiet Zone',
   'Library Level 3 - Computer Lab',
@@ -132,10 +134,16 @@ const detectLocationFromText = (text) => {
   
   // Try sub-parts if no exact match, e.g. "Science Lab" -> "Science Lab Block A"
   const shorthands = {
-    'eoe': 'EOE Hall - Main Entrance',
-    'auditorium': 'EOE Hall - Auditorium',
-    'seminar': 'D01 Seminar Room',
-    'lecture hall': 'D04 Lecture Hall',
+    'eoe': 'EOE Hall - Engineering South',
+    'drawing office 1': 'DO1 - Drawing Office 1',
+    'drawing office 2': 'DO2 - Drawing Office 2',
+    'lecture hall 01': 'LH01 - Lecture Hall 01',
+    'lecture hall 02': 'LH02 - Lecture Hall 02',
+    'seminar room a': 'Seminar Room A',
+    'seminar room b': 'Seminar Room B',
+    'computer lab 01': 'Computer Lab 01',
+    'computer lab 02': 'Computer Lab 02',
+    'electronics lab': 'Electronics Lab',
     'library': 'Library Level 1 - Reading Area',
     'cafeteria': 'Cafeteria Main Hall',
     'science lab': 'Science Lab Block A',
@@ -162,11 +170,11 @@ export function CampusMap({ selectedLocation, onSelectLocation }) {
     { id: 'sports', label: 'Sports & Gym', desc: 'Sports Complex - Indoor', x: 10, y: 65, w: 90, h: 60, color: '#f97316', locs: ['Sports Complex - Indoor', 'Sports Complex - Outdoor', 'Gymnasium'] },
     { id: 'parking', label: 'Parking Area', desc: 'Parking Level 1', x: 10, y: 135, w: 90, h: 40, color: '#64748b', locs: ['Parking Level 1', 'Parking Level 2'] },
     
-    { id: 'eoe', label: 'EOE Hall', desc: 'EOE Hall - Main Entrance', x: 115, y: 10, w: 120, h: 80, color: '#2d7dd2', locs: ['EOE Hall - Main Entrance', 'EOE Hall - Level 2', 'EOE Hall - Level 3', 'EOE Hall - Auditorium'] },
+    { id: 'eoe', label: 'EOE Hall', desc: 'EOE Hall - Engineering South', x: 115, y: 10, w: 120, h: 80, color: '#2d7dd2', locs: ['EOE Hall - Engineering South'] },
     { id: 'library', label: 'Library', desc: 'Library Level 1 - Reading Area', x: 115, y: 100, w: 120, h: 75, color: '#10b981', locs: ['Library Level 1 - Reading Area', 'Library Level 2 - Quiet Zone', 'Library Level 3 - Computer Lab'] },
     
     { id: 'science', label: 'Science Labs', desc: 'Science Lab Block A', x: 250, y: 10, w: 95, h: 50, color: '#14b8a6', locs: ['Science Lab Block A', 'Science Lab Block B', 'Main Lecture Hall - Block C'] },
-    { id: 'seminars', label: 'Seminars', desc: 'D01 Seminar Room', x: 250, y: 70, w: 95, h: 50, color: '#6366f1', locs: ['D01 Seminar Room', 'D02 Seminar Room', 'D03 Seminar Room', 'D04 Lecture Hall'] },
+    { id: 'seminars', label: 'Seminars', desc: 'DO1 - Drawing Office 1', x: 250, y: 70, w: 95, h: 50, color: '#6366f1', locs: ['DO1 - Drawing Office 1', 'DO2 - Drawing Office 2', 'LH01 - Lecture Hall 01', 'LH02 - Lecture Hall 02', 'Seminar Room A', 'Seminar Room B', 'Computer Lab 01', 'Computer Lab 02', 'Electronics Lab'] },
     { id: 'cafeteria', label: 'Cafeteria', desc: 'Cafeteria Main Hall', x: 250, y: 130, w: 95, h: 45, color: '#ef4444', locs: ['Cafeteria Main Hall', 'Cafeteria Annex'] },
   ];
 
@@ -178,7 +186,7 @@ export function CampusMap({ selectedLocation, onSelectLocation }) {
     if (selectedLocation.includes('Library')) return 'library';
     if (selectedLocation.includes('Cafeteria')) return 'cafeteria';
     if (selectedLocation.includes('Science')) return 'science';
-    if (selectedLocation.includes('Seminar') || selectedLocation.includes('D0')) return 'seminars';
+    if (selectedLocation.includes('Seminar') || selectedLocation.includes('LH0') || selectedLocation.includes('DO1') || selectedLocation.includes('DO2') || selectedLocation.includes('Lab') || selectedLocation.includes('Office')) return 'seminars';
     if (selectedLocation.includes('Admin') || selectedLocation.includes('Medical')) return 'admin';
     if (selectedLocation.includes('Sports') || selectedLocation.includes('Gym')) return 'sports';
     if (selectedLocation.includes('Parking')) return 'parking';

@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import TimetableCalendar from '../components/TimetableCalendar';
 
 export default function Dashboard() {
   const [faults, setFaults] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [showAllBookings, setShowAllBookings] = useState(false);
   const [showAllFaults, setShowAllFaults] = useState(false);
+  const [activeBookingTab, setActiveBookingTab] = useState('approved'); // approved, pending, rejected
   const navigate = useNavigate();
   
   const userString = localStorage.getItem('knot_user');
@@ -79,43 +81,91 @@ export default function Dashboard() {
         </section>
 
         <section className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold">Upcoming Bookings</h3>
-            {bookings.length > 3 && (
-               <button onClick={() => setShowAllBookings(!showAllBookings)} className="text-primary text-sm font-bold hover:underline">
-                 {showAllBookings ? 'Show Less' : 'View All'}
-               </button>
-            )}
-          </div>
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 overflow-hidden shadow-sm">
-             {bookings.length === 0 ? (
-                 <div className="p-4 text-center text-sm text-slate-500">No upcoming bookings.</div>
-             ) : (
-                (showAllBookings ? bookings : bookings.slice(0, 3)).map((b, index, arr) => (
-                    <div key={b.id} className={`p-4 flex items-center justify-between ${index !== arr.length - 1 ? 'border-b border-slate-50' : ''}`}>
-                         <div className="flex items-center gap-3">
-                            <div className={`w-12 h-12 ${b.status === 'Approved' ? 'bg-secondary/10 text-secondary' : 'bg-amber-100 text-amber-600'} rounded-lg flex items-center justify-center`}>
-                                <span className="material-symbols-outlined">{b.icon}</span>
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-[13px] truncate">{b.title}</h4>
-                                <p className="text-[12px] text-slate-500 mt-0.5">{b.time_display}</p>
-                            </div>
-                         </div>
-                         <div className="flex flex-col items-end gap-1">
-                             <div className={`px-3 py-1 rounded-full text-xs font-bold ${b.status === 'Approved' ? 'bg-secondary/10 text-secondary' : b.status === 'Rejected' ? 'bg-red-100 text-red-600' : 'bg-[#fff5e1] text-[#e09121]'}`}>
-                                 {b.status}
-                             </div>
-                             {b.status === 'Rejected' && b.rejection_reason && (
-                               <p className="text-[10px] text-red-500 italic max-w-[150px] text-right truncate" title={b.rejection_reason}>
-                                 Reason: {b.rejection_reason}
-                               </p>
-                             )}
-                         </div>
-                    </div>
-                ))
-             )}
-          </div>
+          {(() => {
+            const approvedBookings = bookings.filter(b => b.status === 'Approved');
+            const pendingBookings = bookings.filter(b => b.status === 'Pending' || b.status === 'Pending AR');
+            const rejectedBookings = bookings.filter(b => b.status === 'Rejected');
+
+            const activeTabBookings = activeBookingTab === 'approved' 
+              ? approvedBookings 
+              : activeBookingTab === 'pending' 
+              ? pendingBookings 
+              : rejectedBookings;
+
+            return (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-bold">Upcoming Bookings</h3>
+                  {activeTabBookings.length > 3 && (
+                     <button onClick={() => setShowAllBookings(!showAllBookings)} className="text-primary text-sm font-bold hover:underline">
+                       {showAllBookings ? 'Show Less' : 'View All'}
+                     </button>
+                  )}
+                </div>
+
+                {/* Status Tabs */}
+                <div className="flex border border-slate-200/60 dark:border-slate-700/60 mb-4 bg-slate-100/50 dark:bg-slate-800/40 p-1 rounded-2xl">
+                  <button 
+                    onClick={() => { setActiveBookingTab('approved'); setShowAllBookings(false); }}
+                    className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all ${activeBookingTab === 'approved' ? 'bg-white dark:bg-slate-700 text-secondary dark:text-secondary-light shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'}`}
+                  >
+                    Approved ({approvedBookings.length})
+                  </button>
+                  <button 
+                    onClick={() => { setActiveBookingTab('pending'); setShowAllBookings(false); }}
+                    className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all ${activeBookingTab === 'pending' ? 'bg-white dark:bg-slate-700 text-amber-600 dark:text-amber-400 shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'}`}
+                  >
+                    Pending ({pendingBookings.length})
+                  </button>
+                  <button 
+                    onClick={() => { setActiveBookingTab('rejected'); setShowAllBookings(false); }}
+                    className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all ${activeBookingTab === 'rejected' ? 'bg-white dark:bg-slate-700 text-red-600 dark:text-red-400 shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'}`}
+                  >
+                    Rejected ({rejectedBookings.length})
+                  </button>
+                </div>
+
+                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden shadow-sm">
+                   {activeTabBookings.length === 0 ? (
+                       <div className="p-6 text-center text-sm text-slate-500 dark:text-slate-400">
+                         {activeBookingTab === 'approved' && "No approved bookings."}
+                         {activeBookingTab === 'pending' && "No pending requests."}
+                         {activeBookingTab === 'rejected' && "No rejected requests."}
+                       </div>
+                   ) : (
+                      (showAllBookings ? activeTabBookings : activeTabBookings.slice(0, 3)).map((b, index, arr) => (
+                          <div key={b.id} className={`p-4 flex items-center justify-between ${index !== arr.length - 1 ? 'border-b border-slate-50 dark:border-slate-700/50' : ''}`}>
+                               <div className="flex items-center gap-3">
+                                  <div className={`w-12 h-12 ${b.status === 'Approved' ? 'bg-secondary/10 text-secondary' : b.status === 'Rejected' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'} rounded-xl flex items-center justify-center`}>
+                                      <span className="material-symbols-outlined">{b.icon}</span>
+                                  </div>
+                                  <div>
+                                      <h4 className="font-bold text-[13px] truncate">{b.title}</h4>
+                                      <p className="text-[12px] text-slate-500 mt-0.5">{b.time_display}</p>
+                                      {b.purpose && (
+                                        <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1 italic font-medium leading-tight">
+                                          Purpose: {b.purpose}
+                                        </p>
+                                      )}
+                                  </div>
+                               </div>
+                               <div className="flex flex-col items-end gap-1">
+                                   <div className={`px-3 py-1 rounded-full text-xs font-bold ${b.status === 'Approved' ? 'bg-secondary/10 text-secondary' : b.status === 'Rejected' ? 'bg-red-100 text-red-600' : b.status === 'Pending AR' ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'}`}>
+                                       {b.status === 'Pending AR' ? 'Pending AR' : b.status}
+                                   </div>
+                                   {b.status === 'Rejected' && b.rejection_reason && (
+                                     <p className="text-[10px] text-red-500 italic max-w-[150px] text-right truncate" title={b.rejection_reason}>
+                                       Reason: {b.rejection_reason}
+                                     </p>
+                                   )}
+                               </div>
+                          </div>
+                      ))
+                   )}
+                </div>
+              </>
+            );
+          })()}
         </section>
 
         <section className="mb-8">
@@ -155,6 +205,10 @@ export default function Dashboard() {
                 ))
              )}
           </div>
+        </section>
+
+        <section className="mb-8">
+          <TimetableCalendar />
         </section>
       </main>
     </div>
