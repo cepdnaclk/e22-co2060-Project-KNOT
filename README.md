@@ -1,5 +1,5 @@
 # KNOT – University Resource & Maintenance Management Platform
-## Project No. 19 | Milestone 3 Completed
+## Project No. 19 | Complete Project Milestone Progression
 
 ## 📌 Project Overview
 
@@ -20,34 +20,50 @@ KNOT addresses these challenges through a unified digital solution with automate
 
 ---
 
-## 🚀 Key Milestone Implemented Updates
+## 🚀 Milestone Progress & Feature Progression
 
-- **Bulk Semester Schedule Import (Dean's Requirement)**:
-  - **Excel / CSV Timetable Import**: Built specifically per the Dean's request to handle pre-booked master semester timetables.
-  - **Automated Validation & Ingestion**: Reads semester schedule files, parses day/time/hall/lecturer attributes, automatically checks for conflicts against existing reservations, skips overlapping slots, and bulk-populates recurring semester lectures into the database.
-- **Booking Admin Portal "All Bookings" Filtering & Sorting**:
-  - **Multi-Criteria Search & Filter**: Filter by Search Text (matching room, lecturer name, user role, or purpose), Multi-Select Room badges (e.g., `EOE Hall`, `DO1`, `Lecture Hall 1`), Quick Date Presets (`Today`, `Tomorrow`, `This Week`, `Future`), Custom Date Ranges, and Status (`Approved`, `Pending AR`, `Pending`, `Rejected`).
-  - **Dynamic Table Sorting**: Sort table data flexibly by Date (Newest/Oldest), Lecture Hall Name, or Status.
-- **Maintenance Worker / Technician Portal (`TechnicianDashboard` & Static Worker Portal)**:
-  - **Admin Task Assignment**: Maintenance Admins review fault reports, assign specific technicians (*Alex Johnson*, *Sam Carter*), set priority levels, and attach technical directives.
-  - **Technician Task Queue**: Technicians receive custom, real-time task queues tailored to their user ID.
-  - **Interactive Task Modal & Evidence Inspector**: Technicians inspect full location info, map coordinates, reporter descriptions, and user evidence photos.
-  - **Status Progression & Work Logs**: Technicians update jobs in real-time (`Open` ➡️ `In Progress` ➡️ `Resolved`), add maintenance resolution notes, and upload proof-of-work photos upon completion.
+### 🔹 Milestone 1: Core Foundation & System Architecture
+- **Authentication & Role-Based Access Control (RBAC)**:
+  - Multi-role authentication framework supporting 5 distinct user roles: Students, Lecturers, Booking Admins (AR Office), Maintenance Admins, and Field Technicians.
+- **Resource Database Schemas**:
+  - Relational database normalization for lecture halls, drawing offices, seminar rooms, and computer labs with capacity metrics and operational status tracking.
+- **Unified UI Architecture & Design System**:
+  - Responsive Single Page Application (SPA) architecture using React.js and Tailwind CSS with glassmorphism UI elements, dark/light theme support, and role-guarded routing.
+
+---
+
+### 🔹 Milestone 2: Multi-Tier Booking Workflow & Maintenance Ticketing
+- **Multi-Tier Academic Booking Workflow**:
+  - Structured 3-step approval chain: Student Request ➡️ Lecturer Endorsement ➡️ Booking Admin (AR Office) Final Approval.
+  - Support for rejection feedback notes and booking status visibility for students.
+- **Dean's Requirement Bulk Schedule Import**:
+  - Master schedule file upload capability allowing Booking Admins to bulk-ingest recurring semester lecture timetables into the database with automated overlap detection.
+- **Maintenance Reporting Module (Basic)**:
+  - Issue submission interface enabling campus users to report infrastructure faults with category tags, descriptions, and urgency priority levels.
+- **Admin System Settings**:
+  - Configurable `auto_booking` toggle setting for Booking Admins to automate straightforward reservations.
+
+---
+
+### 🌟 Milestone 3: Real-Time Availability Grid, Worker Portal & System Integration
 - **Interactive Real-Time Hall Availability Grid**:
-  - Visual hourly slot selection grid (08:00 AM – 06:00 PM) replacing static dropdowns.
-  - Real-time database conflict checking for approved reservations.
-  - Color-coded badges (`Available`, `Booked: [Purpose]`, `Already Passed`) and occupied range protection.
-- **Semester Timetable Calendar Enhancements**:
-  - Native HTML5 datepicker calendar date filtering.
-  - Datepicker-filtered **Agenda View** displaying lectures strictly for selected dates.
-  - Single-room timeline grid view when filtering by a specific hall.
+  - Visual hourly time-slot selection grid (08:00 AM – 06:00 PM) replacing static dropdowns.
+  - Real-time database queries displaying booked status badges (`Available`, `Booked: [Purpose]`, `Already Passed`) and preventing double-booking over occupied ranges.
+- **Maintenance Worker Portal Integration (`TechnicianDashboard` & Static Worker Portal)**:
+  - **Admin Task Assignment & Dispatch**: Maintenance Admins review fault reports, assign specific technicians (*Alex Johnson*, *Sam Carter*), set priority levels, and attach technical directives.
+  - **Technician Task Queue**: Technicians receive custom, real-time task queues tailored to their user ID.
+  - **Interactive Task Modal & Evidence Inspector**: Technicians inspect location info, map coordinates, reporter notes, and user evidence photos.
+  - **Status Progression & Work Logs**: Technicians update jobs in real-time (`Open` ➡️ `In Progress` ➡️ `Resolved`), add maintenance resolution notes, and upload proof-of-work photos upon completion.
+- **Semester Timetable Calendar & Single-Room Timeline View**:
+  - Native HTML5 datepicker calendar filtering with Datepicker-Filtered Agenda View.
+  - Focused single-room timeline grid view when filtering by a specific hall.
   - Standardized 10 uniform lecture hall names across all UI elements and database schemas (`EOE Hall`, `DO1`, `DO2`, `Lecture Hall 1`, `Lecture Hall 2`, `Seminar Room 1`, `Seminar Room 2`, `Computer Lab 1`, `Computer Lab 2`, `Main Auditorium`).
-- **Maintenance Reporting & Admin Evidence Viewer**:
+- **Interactive Map Pinning & Photo Evidence Inspector**:
   - OpenStreetMap Leaflet location selector with reverse-geocoding (Nominatim API) and map pin dropping.
-  - Support for high-resolution Base64 photo attachments with 50MB backend payload limits.
+  - High-resolution photo evidence upload with 50MB backend payload support.
   - Maintenance Admin Ticket Details view with a dedicated **Evidence Photo Viewer**.
-- **Multi-Tier Resource Booking Approval Workflow**:
-  - Student Request ➡️ Lecturer Endorsement ➡️ Booking Admin Final Approval with rejection feedback notes.
+- **Booking Admin Portal "All Bookings" Advanced Sorting & Multi-Criteria Filtering**:
+  - Multi-select room badges, quick date presets (`Today`, `Tomorrow`, `This Week`, `Future`), custom date range pickers, status pills, and dynamic multi-column table sorting.
 
 ---
 
@@ -89,11 +105,11 @@ Open your browser and navigate to **`http://localhost:3000`**.
 
 ---
 
-## 📅 Project Timeline & Milestone Status
+## 📅 Milestone Summary
 
-- **Milestone 1** – Requirement Finalization, UI Design & Architecture Setup ✅ *(Completed)*
-- **Milestone 2** – Booking Workflow, Conflict Detection, Bulk Timetable Import Specification & Basic Maintenance Reporting ✅ *(Completed)*
-- **Milestone 3** – Bulk Excel Semester Schedule Ingestion, Admin Multi-Criteria Sorting & Filtering, Maintenance Worker Portal Integration, Admin Task Assignment Workflow, Interactive Slot Availability Grid, Map/Photo Evidence Viewer & Comprehensive MVP Validation ✅ *(Completed)*
+- **Milestone 1** – Core Architecture, UI Design & Multi-Role RBAC Authentication Setup ✅ *(Completed)*
+- **Milestone 2** – Multi-Tier Booking Workflow, Dean's Bulk Timetable Ingestion & Basic Maintenance Reporting ✅ *(Completed)*
+- **Milestone 3** – Interactive Availability Grid, Worker Portal Integration, Admin Task Assignment, Map & Photo Evidence Inspector, Timetable Agenda View & System Validation ✅ *(Completed)*
 
 ---
 
