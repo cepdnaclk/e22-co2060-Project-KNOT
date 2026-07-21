@@ -58,35 +58,37 @@ Project KNOT is a unified, centralized resource and maintenance management platf
 ### 🔹 Milestone 2: Academic Booking Workflow & Maintenance Reporting
 1. **Multi-Tier Academic Approval Workflow**:
    - Implemented 3-stage reservation approval chain: Student Request ➡️ Lecturer Endorsement ➡️ Booking Admin Final Approval.
-2. **Dean's Requirement Bulk Schedule Import**:
-   - Created a master timetable ingestion tool for Booking Admins to bulk-upload semester schedules into the database with conflict checking.
-3. **Basic Fault Reporting Module**:
+2. **Basic Fault Reporting Module**:
    - Implemented issue submission features allowing campus users to report infrastructure faults with category tags and priority levels.
 
 ---
 
-### 🌟 Milestone 3: Real-Time Availability Grid, Worker Portal & System Integration
-1. **Interactive Real-Time Hall Availability Grid**:
+### 🌟 Milestone 3: Real-Time Availability Grid, Worker Portal, Bulk Schedule Import & System Integration
+1. **Bulk Semester Schedule Import Implementation (Dean's Requirement)**:
+   - **Master Timetable Ingestion Engine**: Implemented specifically per the Dean's requirement to handle pre-booked master semester timetables.
+   - **Automated Validation & Ingestion**: Parses semester schedule files, extracts day/time/hall/lecturer attributes, automatically verifies conflicts against existing database reservations, skips overlapping slots, and bulk-populates recurring semester lectures into the system.
+
+2. **Interactive Real-Time Hall Availability Grid**:
    - Visual hourly slot selection grid (08:00 AM – 06:00 PM) replacing static dropdowns.
    - Real-time database queries displaying booked status badges (`Available`, `Booked: [Purpose]`, `Already Passed`) and preventing double-booking over occupied ranges.
 
-2. **Maintenance Worker Portal Integration & Admin Task Assignment**:
+3. **Maintenance Worker Portal Integration & Admin Task Assignment**:
    - **Admin Task Assignment & Dispatch**: Maintenance Admins review fault reports, assign specific technicians (*Alex Johnson*, *Sam Carter*), set priority levels, and attach technical directives.
    - **Technician Task Queue (`TechnicianDashboard`)**: Technicians access a personal, real-time job queue filtering tickets assigned specifically to their ID.
    - **Interactive Task Modal & Evidence Inspector**: Technicians inspect location info, map coordinates, reporter notes, and user evidence photos.
    - **Status Progression & Work Logs**: Technicians update jobs in real-time (`Open` ➡️ `In Progress` ➡️ `Resolved`), add maintenance resolution notes, and upload proof-of-work photos upon completion.
 
-3. **Booking Admin Portal "All Bookings" Sorting & Filtering**:
+4. **Booking Admin Portal "All Bookings" Sorting & Filtering**:
    - **Multi-Criteria Search & Filter**: Filter by Search Text (matching room, lecturer name, user role, or purpose), Multi-Select Room badges (e.g., `EOE Hall`, `DO1`, `Lecture Hall 1`), Quick Date Presets (`Today`, `Tomorrow`, `This Week`, `Future`), Custom Date Ranges, and Status (`Approved`, `Pending AR`, `Pending`, `Rejected`).
    - **Flexible Sorting**: Sort table rows by Date (Newest/Oldest), Lecture Hall Name, or Status.
 
-4. **Semester Timetable Calendar Enhancements**:
+5. **Semester Timetable Calendar Enhancements**:
    - Native HTML5 datepicker calendar integration.
    - Datepicker-filtered **Agenda View** displaying lectures strictly for selected dates.
    - Dedicated single-room grid timeline view when filtering by a specific hall.
    - Standardized 10 uniform lecture hall names across all UI elements and database schemas (`EOE Hall`, `DO1`, `DO2`, `Lecture Hall 1`, `Lecture Hall 2`, `Seminar Room 1`, `Seminar Room 2`, `Computer Lab 1`, `Computer Lab 2`, `Main Auditorium`).
 
-5. **Maintenance Reporting & Admin Evidence Viewer**:
+6. **Maintenance Reporting & Admin Evidence Viewer**:
    - Integrated OpenStreetMap (Leaflet) with reverse geocoding (Nominatim API) and map pin dropping.
    - High-resolution photo evidence upload support with 50MB JSON payload limits.
    - Maintenance Admin Ticket Details view with a dedicated **Evidence Photo Viewer**.

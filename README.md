@@ -32,12 +32,10 @@ KNOT addresses these challenges through a unified digital solution with automate
 
 ---
 
-### 🔹 Milestone 2: Multi-Tier Booking Workflow & Maintenance Ticketing
+### 🔹 Milestone 2: Multi-Tier Booking Workflow & Maintenance Reporting
 - **Multi-Tier Academic Booking Workflow**:
   - Structured 3-step approval chain: Student Request ➡️ Lecturer Endorsement ➡️ Booking Admin (AR Office) Final Approval.
   - Support for rejection feedback notes and booking status visibility for students.
-- **Dean's Requirement Bulk Schedule Import**:
-  - Master schedule file upload capability allowing Booking Admins to bulk-ingest recurring semester lecture timetables into the database with automated overlap detection.
 - **Maintenance Reporting Module (Basic)**:
   - Issue submission interface enabling campus users to report infrastructure faults with category tags, descriptions, and urgency priority levels.
 - **Admin System Settings**:
@@ -45,7 +43,10 @@ KNOT addresses these challenges through a unified digital solution with automate
 
 ---
 
-### 🌟 Milestone 3: Real-Time Availability Grid, Worker Portal & System Integration
+### 🌟 Milestone 3: Real-Time Availability Grid, Worker Portal, Bulk Schedule Import & System Integration
+- **Bulk Semester Schedule Import Implementation (Dean's Requirement)**:
+  - **Master Timetable Import Engine**: Built specifically per the Dean's requirement to handle pre-booked master semester timetables.
+  - **Automated Validation & Ingestion**: Reads semester schedule files, parses day/time/hall/lecturer attributes, automatically checks for conflicts against existing database reservations, skips overlapping slots, and bulk-populates recurring semester lectures into the system.
 - **Interactive Real-Time Hall Availability Grid**:
   - Visual hourly time-slot selection grid (08:00 AM – 06:00 PM) replacing static dropdowns.
   - Real-time database queries displaying booked status badges (`Available`, `Booked: [Purpose]`, `Already Passed`) and preventing double-booking over occupied ranges.
@@ -108,8 +109,8 @@ Open your browser and navigate to **`http://localhost:3000`**.
 ## 📅 Milestone Summary
 
 - **Milestone 1** – Core Architecture, UI Design & Multi-Role RBAC Authentication Setup ✅ *(Completed)*
-- **Milestone 2** – Multi-Tier Booking Workflow, Dean's Bulk Timetable Ingestion & Basic Maintenance Reporting ✅ *(Completed)*
-- **Milestone 3** – Interactive Availability Grid, Worker Portal Integration, Admin Task Assignment, Map & Photo Evidence Inspector, Timetable Agenda View & System Validation ✅ *(Completed)*
+- **Milestone 2** – Multi-Tier Booking Workflow & Basic Maintenance Reporting ✅ *(Completed)*
+- **Milestone 3** – Dean's Bulk Semester Timetable Import, Interactive Availability Grid, Worker Portal Integration, Admin Task Assignment, Map & Photo Evidence Inspector, Timetable Agenda View & System Validation ✅ *(Completed)*
 
 ---
 
