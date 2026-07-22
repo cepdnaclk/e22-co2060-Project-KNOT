@@ -78,7 +78,9 @@ Project KNOT is a unified, centralized resource and maintenance management platf
    - **Interactive Task Modal & Evidence Inspector**: Technicians inspect location info, map coordinates, reporter notes, and user evidence photos.
    - **Status Progression & Work Logs**: Technicians update jobs in real-time (`Open` ➡️ `In Progress` ➡️ `Resolved`), add maintenance resolution notes, and upload proof-of-work photos upon completion.
 
-4. **Booking Admin Portal "All Bookings" Sorting & Filtering**:
+4. **Booking Admin Portal Automated Approval System & Multi-Criteria Filtering**:
+   - **Automated Reservation Approval Engine**: Implemented an automated booking approval system in the Booking Admin Portal. When enabled (`auto_booking: true`), routine conflict-free hall booking requests are automatically validated against existing reservations and instantly approved (`Approved`) without administrative delay.
+   - **Configurable Control Panel**: Configurable toggle in Booking Admin System Settings with persistent MySQL database state (`settings` table) allowing admins to toggle between automated approvals and manual AR office reviews.
    - **Multi-Criteria Search & Filter**: Filter by Search Text (matching room, lecturer name, user role, or purpose), Multi-Select Room badges (e.g., `EOE Hall`, `DO1`, `Lecture Hall 1`), Quick Date Presets (`Today`, `Tomorrow`, `This Week`, `Future`), Custom Date Ranges, and Status (`Approved`, `Pending AR`, `Pending`, `Rejected`).
    - **Flexible Sorting**: Sort table rows by Date (Newest/Oldest), Lecture Hall Name, or Status.
 

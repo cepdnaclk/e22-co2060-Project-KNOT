@@ -63,8 +63,10 @@ KNOT addresses these challenges through a unified digital solution with automate
   - OpenStreetMap Leaflet location selector with reverse-geocoding (Nominatim API) and map pin dropping.
   - High-resolution photo evidence upload with 50MB backend payload support.
   - Maintenance Admin Ticket Details view with a dedicated **Evidence Photo Viewer**.
-- **Booking Admin Portal "All Bookings" Advanced Sorting & Multi-Criteria Filtering**:
-  - Multi-select room badges, quick date presets (`Today`, `Tomorrow`, `This Week`, `Future`), custom date range pickers, status pills, and dynamic multi-column table sorting.
+- **Booking Admin Portal Advanced Sorting, Multi-Criteria Filtering & Automated System**:
+  - **Automated Reservation Approval Engine**: Implemented an automated booking approval system for the Booking Admin Portal. When enabled (`auto_booking: true`), routine conflict-free reservation requests are automatically validated and instantly approved (`Approved`) without requiring manual AR office intervention.
+  - **System Auto-Booking Control Panel**: Configurable system-wide toggle in Booking Admin settings with persistent database state (`settings` table) allowing admins to seamlessly switch between automated instant approvals and manual review.
+  - **Multi-Criteria Search & Filter**: Filter by search text, multi-select room badges, quick date presets (`Today`, `Tomorrow`, `This Week`, `Future`), custom date range pickers, status pills (`Approved`, `Pending AR`, `Pending`, `Rejected`), and dynamic multi-column table sorting.
 
 ---
 

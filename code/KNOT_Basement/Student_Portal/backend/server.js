@@ -9,10 +9,10 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Database Pool
 const pool = mysql.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: 'Chamu@280',
-  database: 'knot_db',
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD !== undefined ? process.env.DB_PASSWORD : 'new_password',
+  database: process.env.DB_NAME || 'knot_db',
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0

@@ -2,9 +2,9 @@ const mysql = require('mysql2/promise');
 
 // Configuration for connecting without a database first
 const dbConfig = {
-  host: 'localhost',
-  user: 'root',
-  password: 'Chamu@280' // Default password is empty, change if needed
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD !== undefined ? process.env.DB_PASSWORD : 'new_password'
 };
 
 async function setupDatabase() {

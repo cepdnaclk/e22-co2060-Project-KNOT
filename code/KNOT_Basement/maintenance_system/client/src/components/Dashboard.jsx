@@ -636,7 +636,12 @@ export default function Dashboard() {
         {stats && (
           <section className="mb-8">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 flex items-center gap-4 hover:shadow-md transition-shadow">
+              <div 
+                onClick={() => { setFilterStatus('Open'); setCurrentPage(1); }}
+                className={`bg-white rounded-2xl shadow-sm border p-5 flex items-center gap-4 cursor-pointer transition-all hover:shadow-md ${
+                  filterStatus === 'Open' ? 'border-orange-500 ring-2 ring-orange-500/20' : 'border-slate-100'
+                }`}
+              >
                 <div className="w-12 h-12 rounded-xl bg-orange-100 text-orange-500 flex items-center justify-center shrink-0">
                   <ClipboardList size={22} />
                 </div>
@@ -646,22 +651,32 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 flex items-center gap-4 hover:shadow-md transition-shadow">
+              <div 
+                onClick={() => { setFilterStatus('In Progress'); setCurrentPage(1); }}
+                className={`bg-white rounded-2xl shadow-sm border p-5 flex items-center gap-4 cursor-pointer transition-all hover:shadow-md ${
+                  filterStatus === 'In Progress' ? 'border-blue-500 ring-2 ring-blue-500/20' : 'border-slate-100'
+                }`}
+              >
                 <div className="w-12 h-12 rounded-xl bg-blue-100 text-blue-500 flex items-center justify-center shrink-0">
-                  <RefreshCcw size={22} />
+                  <RefreshCcw size={22} className="animate-spin-slow" />
                 </div>
                 <div>
-                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">In Progress</p>
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">In Progress Work</p>
                   <p className="text-3xl font-bold text-slate-900 leading-none">{stats.inProgress}</p>
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 flex items-center gap-4 hover:shadow-md transition-shadow">
+              <div 
+                onClick={() => { setFilterStatus('Resolved'); setCurrentPage(1); }}
+                className={`bg-white rounded-2xl shadow-sm border p-5 flex items-center gap-4 cursor-pointer transition-all hover:shadow-md ${
+                  filterStatus === 'Resolved' ? 'border-green-500 ring-2 ring-green-500/20' : 'border-slate-100'
+                }`}
+              >
                 <div className="w-12 h-12 rounded-xl bg-green-100 text-green-500 flex items-center justify-center shrink-0">
                   <CheckCircle2 size={22} />
                 </div>
                 <div>
-                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Resolved</p>
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Done / Resolved Work</p>
                   <p className="text-3xl font-bold text-slate-900 leading-none">{stats.resolvedToday}</p>
                 </div>
               </div>
@@ -671,11 +686,50 @@ export default function Dashboard() {
 
         {/* Tickets Section */}
         <section className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-slate-900">Active Tickets</h2>
-            <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+            <h2 className="text-lg font-bold text-slate-900">Active Maintenance Work</h2>
+            <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full self-start sm:self-auto">
               {pagination?.total || 0} total
             </span>
+          </div>
+
+          {/* Quick Work Status Tabs */}
+          <div className="flex items-center gap-2 mb-3 overflow-x-auto pb-1">
+            <button
+              onClick={() => { setFilterStatus(''); setCurrentPage(1); }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all border whitespace-nowrap ${
+                !filterStatus ? 'bg-slate-900 text-white border-slate-900 shadow-sm' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+              }`}
+            >
+              All Work
+            </button>
+            <button
+              onClick={() => { setFilterStatus('In Progress'); setCurrentPage(1); }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border whitespace-nowrap ${
+                filterStatus === 'In Progress' ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
+              }`}
+            >
+              <RefreshCcw size={13} className={filterStatus === 'In Progress' ? 'animate-spin' : ''} />
+              In Progress Work ({stats?.inProgress || 0})
+            </button>
+            <button
+              onClick={() => { setFilterStatus('Resolved'); setCurrentPage(1); }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border whitespace-nowrap ${
+                filterStatus === 'Resolved' ? 'bg-green-600 text-white border-green-600 shadow-sm' : 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
+              }`}
+            >
+              <CheckCircle2 size={13} />
+              Done Work ({stats?.resolvedToday || 0})
+            </button>
+            <button
+              onClick={() => { setFilterStatus('Open'); setCurrentPage(1); }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border whitespace-nowrap ${
+                filterStatus === 'Open' ? 'bg-orange-600 text-white border-orange-600 shadow-sm' : 'bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100'
+              }`}
+            >
+              <ClipboardList size={13} />
+              Open ({stats?.open || 0})
+            </button>
           </div>
 
           {/* Search & Filters */}
