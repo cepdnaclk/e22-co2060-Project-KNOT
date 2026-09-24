@@ -112,8 +112,8 @@ export default function BookSpace() {
   return (
     <div className="text-slate-900 bg-background-light min-h-screen flex flex-col w-full pb-20">
       <header className="flex items-center p-4 bg-slate-900 shadow-sm z-10 w-full relative">
-        <button className="flex items-center gap-1 text-slate-300 hover:text-white" onClick={() => navigate(-1)}>
-          <span className="material-symbols-outlined text-[20px]">arrow_back_ios</span>
+        <button aria-label="Go back" className="flex items-center gap-1 text-slate-300 hover:text-white" onClick={() => navigate(-1)}>
+          <span className="material-symbols-outlined text-[20px]" aria-hidden="true">arrow_back_ios</span>
           <span className="font-bold text-sm">Back</span>
         </button>
         <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
@@ -127,8 +127,8 @@ export default function BookSpace() {
 
         <div className="bg-white border-b border-slate-100 rounded-xl shadow-sm mb-4">
             <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-3.5 text-primary pointer-events-none">location_on</span>
-                <select value={location} onChange={(e) => setLocation(e.target.value)} className="w-full border border-slate-200 bg-white rounded-xl py-3.5 pl-10 pr-10 appearance-none text-sm text-slate-700 font-bold focus:border-primary shadow-sm focus:bg-white transition-colors">
+                <span className="material-symbols-outlined absolute left-3 top-3.5 text-primary pointer-events-none" aria-hidden="true">location_on</span>
+                <select aria-label="Select location" value={location} onChange={(e) => setLocation(e.target.value)} className="w-full border border-slate-200 bg-white rounded-xl py-3.5 pl-10 pr-10 appearance-none text-sm text-slate-700 font-bold focus:border-primary shadow-sm focus:bg-white transition-colors">
                     <option value="eoe">EOE Hall - Engineering South</option>
                     <option value="do1">DO1 - Drawing Office 1</option>
                 </select>
@@ -175,19 +175,19 @@ export default function BookSpace() {
                  <div className="space-y-4 pt-2">
                      <div>
                          <label className="block text-xs font-bold mb-1.5">Date <span className="text-red-500">*</span></label>
-                         <input type="date" min={today} value={date} onChange={e => setDate(e.target.value)} className="w-full border border-slate-200 bg-white rounded-lg p-3 text-sm focus:border-primary shadow-sm" />
+                         <input aria-label="Select date" type="date" min={today} value={date} onChange={e => setDate(e.target.value)} className="w-full border border-slate-200 bg-white rounded-lg p-3 text-sm focus:border-primary shadow-sm" />
                      </div>
 
                      <div>
                          <label className="block text-xs font-bold mb-1.5">Purpose of Booking <span className="text-red-500">*</span></label>
-                         <textarea value={purpose} onChange={e => setPurpose(e.target.value)} placeholder="e.g., Club meeting, Supplementary lecture, etc." className="w-full border border-slate-200 bg-white rounded-lg p-3 h-20 placeholder:text-slate-400 focus:border-primary shadow-sm text-sm"></textarea>
+                         <textarea aria-label="Purpose of booking" value={purpose} onChange={e => setPurpose(e.target.value)} placeholder="e.g., Club meeting, Supplementary lecture, etc." className="w-full border border-slate-200 bg-white rounded-lg p-3 h-20 placeholder:text-slate-400 focus:border-primary shadow-sm text-sm"></textarea>
                      </div>
 
                      {user?.role !== 'Lecturer' && (
                        <div>
                            <label className="block text-xs font-bold mb-1.5">Select Lecturer in Charge <span className="text-red-500">*</span></label>
                            <div className="relative">
-                               <select value={lecturer} onChange={e => setLecturer(e.target.value)} className="w-full border border-slate-200 bg-white rounded-lg p-3 appearance-none text-sm focus:border-primary shadow-sm">
+                               <select aria-label="Select lecturer in charge" value={lecturer} onChange={e => setLecturer(e.target.value)} className="w-full border border-slate-200 bg-white rounded-lg p-3 appearance-none text-sm focus:border-primary shadow-sm">
                                    <option value="" disabled>Choose a lecturer for endorsement</option>
                                    <option value="Dr. Smith">Dr. Smith</option>
                                    <option value="Prof. Johnson">Prof. Johnson</option>
