@@ -1,3 +1,4 @@
+// Maintenance staff authentication interface
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, KeyRound, ArrowRight, Loader2 } from 'lucide-react';
@@ -114,3 +115,4 @@ export default function Login({ setAuth }) {
     </div>
   );
 }
+
