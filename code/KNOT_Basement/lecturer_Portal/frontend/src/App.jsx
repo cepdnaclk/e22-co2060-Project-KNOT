@@ -19,3 +19,5 @@ function App() {
 }
 
 export default App;
+
+// Added routing documentation to App component
