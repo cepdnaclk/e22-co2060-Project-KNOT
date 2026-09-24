@@ -1,3 +1,4 @@
+// Admin application routing configuration
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { LayoutDashboard, Ticket, Wrench, Settings } from 'lucide-react';
@@ -64,3 +65,4 @@ function App() {
 }
 
 export default App;
+
