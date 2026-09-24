@@ -134,3 +134,5 @@ app.listen(PORT, () => {
 });
 
 // Documented lecturer /api/bookings endpoint
+
+// Documented lecturer /api/availability endpoint
