@@ -34,3 +34,5 @@ export default function App() {
     </BrowserRouter>
   );
 }
+
+// Added routing documentation to App component
