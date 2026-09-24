@@ -64,3 +64,5 @@ function App() {
 }
 
 export default App;
+
+// Enhanced dashboard component documentation
