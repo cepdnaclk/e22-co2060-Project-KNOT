@@ -1,3 +1,4 @@
+// Backend server configuration for maintenance API
 const express = require('express');
 const cors = require('cors');
 const pool = require('./db');
@@ -323,3 +324,4 @@ app.put('/api/technician/tickets/:id', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
