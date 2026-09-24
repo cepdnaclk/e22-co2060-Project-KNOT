@@ -599,3 +599,5 @@ app.listen(PORT, () => {
 });
 
 // Documented /api/bookings endpoint for better readability
+
+// Documented /api/availability endpoint for conflict checks
